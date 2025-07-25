@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTWG Grade Calculator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        /* Constants and Theme */
+        :root {
+            --accent-color: #0065bd;
+            --background-color: #ffffff;
+            --text-color: #333333;
+            --border-color: #e0e0e0;
+            --border-radius: 8px;
+            --shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--accent-color);
+            margin-bottom: 30px;
+            font-size: 2rem;
+            font-weight: 300;
+        }
+
+        .control-bar {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+        }
+
+        .file-input-container {
+            margin-bottom: 20px;
+        }
+
+        .file-input-container label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--accent-color);
+        }
+
+        input[type="file"] {
+            width: 100%;
+            padding: 10px;
+            border: 2px dashed var(--border-color);
+            border-radius: var(--border-radius);
+            background: #f9f9f9;
+            cursor: pointer;
+            transition: border-color 0.3s ease;
+        }
+
+        input[type="file"]:hover {
+            border-color: var(--accent-color);
+        }
+
+        .table-container {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+            overflow-x: auto;
+        }
+
+        .table-container h2 {
+            margin-bottom: 15px;
+            color: var(--accent-color);
+            font-size: 1.5rem;
+            font-weight: 400;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 12px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            color: var(--accent-color);
+            position: sticky;
+            top: 0;
+        }
+
+        tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .computed-column {
+            background-color: #f0f8ff;
+            font-weight: 500;
+        }
+
+        .error {
+            color: #dc3545;
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            border-radius: var(--border-radius);
+            padding: 10px;
+            margin: 10px 0;
+        }
+
+        .info {
+            color: #0c5460;
+            background-color: #d1ecf1;
+            border: 1px solid #bee5eb;
+            border-radius: var(--border-radius);
+            padding: 10px;
+            margin: 10px 0;
+        }
+
+        .scrollable-table {
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            table {
+                font-size: 14px;
+            }
+            
+            th, td {
+                padding: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>HTWG Grade Calculator</h1>
+        
+        <div class="control-bar">
+            <div class="file-input-container">
+                <label for="grading-file">Upload Grading Excel File (.xlsx)</label>
+                <input type="file" id="grading-file" accept=".xlsx" />
+            </div>
+        </div>
+
+        <div id="grading-table-container" class="table-container" style="display: none;">
+            <h2>Grading Table</h2>
+            <div id="grading-table-content"></div>
+        </div>
+
+        <div id="error-container"></div>
+    </div>
+
+    <script>
+        // Constants - All thresholds and mappings defined here for maintainability
+        const GRADE_CONSTANTS = {
+            // Default thresholds (will be configurable in later phases)
+            DEFAULT_P1: 20,  // Points for grade 1.0
+            DEFAULT_P4: 10,  // Points for grade 4.0
+            
+            // Grade mapping intervals (based on F4 specification)
+            GRADE_MAPPING: [
+                { max: 1.15, grade: 100 },
+                { max: 1.50, grade: 130 },
+                { max: 1.85, grade: 170 },
+                { max: 2.15, grade: 200 },
+                { max: 2.50, grade: 230 },
+                { max: 2.85, grade: 270 },
+                { max: 3.15, grade: 300 },
+                { max: 3.50, grade: 330 },
+                { max: 3.85, grade: 370 },
+                { max: 4.15, grade: 400 },
+                { max: Infinity, grade: 500 }
+            ]
+        };
+
+        // Global variables
+        let gradingData = [];
+        let currentP1 = GRADE_CONSTANTS.DEFAULT_P1;
+        let currentP4 = GRADE_CONSTANTS.DEFAULT_P4;
+
+        // F1 - File upload handler
+        document.getElementById('grading-file').addEventListener('change', handleFileUpload);
+
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            clearErrors();
+
+            if (!file.name.endsWith('.xlsx')) {
+                showError('Please select an Excel file (.xlsx)');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const workbook = XLSX.read(e.target.result, { type: 'binary' });
+                    const firstSheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[firstSheetName];
+                    
+                    // Convert to JSON
+                    const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                    
+                    if (jsonData.length < 2) {
+                        showError('Excel file must contain at least a header row and one data row');
+                        return;
+                    }
+
+                    processGradingData(jsonData);
+                } catch (error) {
+                    showError('Error reading Excel file: ' + error.message);
+                }
+            };
+            reader.readAsBinaryString(file);
+        }
+
+        function processGradingData(rawData) {
+            try {
+                const headers = rawData[0];
+                
+                // Validate that first column is mtknr
+                if (!headers[0] || headers[0].toLowerCase() !== 'mtknr') {
+                    showError('First column must be "mtknr" (student ID)');
+                    return;
+                }
+
+                // Process data rows
+                gradingData = [];
+                for (let i = 1; i < rawData.length; i++) {
+                    const row = rawData[i];
+                    if (!row || row.length === 0) continue; // Skip empty rows
+                    
+                    const studentData = {
+                        mtknr: row[0],
+                        taskScores: [],
+                        originalRow: row
+                    };
+
+                    // Extract numeric task scores (columns 1 onwards)
+                    for (let j = 1; j < headers.length; j++) {
+                        const score = parseFloat(row[j]);
+                        if (!isNaN(score)) {
+                            studentData.taskScores.push(score);
+                        }
+                    }
+
+                    if (studentData.mtknr) {
+                        gradingData.push(studentData);
+                    }
+                }
+
+                if (gradingData.length === 0) {
+                    showError('No valid student data found in the Excel file');
+                    return;
+                }
+
+                // Calculate grades and display table
+                calculateGrades();
+                displayGradingTable(headers);
+                
+                showInfo(`Successfully loaded ${gradingData.length} students from the Excel file`);
+
+            } catch (error) {
+                showError('Error processing grading data: ' + error.message);
+            }
+        }
+
+        // F2, F3, F4 - Point aggregation, linear interpolation, and discrete grade mapping
+        function calculateGrades() {
+            gradingData.forEach(student => {
+                // F2 - Point aggregation
+                student.pkt = student.taskScores.reduce((sum, score) => sum + score, 0);
+                
+                // F3 - Linear interpolation (raw note 1.0 - 6.0)
+                student.raw_note = calculateRawNote(student.pkt, currentP1, currentP4);
+                
+                // F4 - Discrete grade mapping
+                student.grade = mapToDiscreteGrade(student.raw_note);
+            });
+        }
+
+        function calculateRawNote(points, p1, p4) {
+            // Linear interpolation formula from requirements:
+            // raw_note = 3/(P4 − P1) · pkt + [1 − 3·P1/(P4 − P1)]
+            const slope = 3 / (p4 - p1);
+            const intercept = 1 - (3 * p1) / (p4 - p1);
+            return slope * points + intercept;
+        }
+
+        function mapToDiscreteGrade(rawNote) {
+            // Apply the R-style function from F4
+            for (const mapping of GRADE_CONSTANTS.GRADE_MAPPING) {
+                if (rawNote <= mapping.max) {
+                    return mapping.grade / 100; // Divide by 100 to get final grade
+                }
+            }
+            return 5.0; // Fallback
+        }
+
+        function displayGradingTable(originalHeaders) {
+            const container = document.getElementById('grading-table-content');
+            
+            // Create enhanced headers
+            const enhancedHeaders = [...originalHeaders, 'pkt', 'raw_note', 'grade'];
+            
+            let tableHTML = '<div class="scrollable-table"><table>';
+            
+            // Header row
+            tableHTML += '<thead><tr>';
+            enhancedHeaders.forEach((header, index) => {
+                const isComputed = index >= originalHeaders.length;
+                const className = isComputed ? 'computed-column' : '';
+                tableHTML += `<th class="${className}">${header}</th>`;
+            });
+            tableHTML += '</tr></thead>';
+            
+            // Data rows
+            tableHTML += '<tbody>';
+            gradingData.forEach(student => {
+                tableHTML += '<tr>';
+                
+                // Original data columns
+                student.originalRow.forEach(value => {
+                    tableHTML += `<td>${value !== undefined ? value : ''}</td>`;
+                });
+                
+                // Computed columns
+                tableHTML += `<td class="computed-column">${student.pkt.toFixed(1)}</td>`;
+                tableHTML += `<td class="computed-column">${student.raw_note.toFixed(2)}</td>`;
+                tableHTML += `<td class="computed-column">${student.grade.toFixed(1)}</td>`;
+                
+                tableHTML += '</tr>';
+            });
+            tableHTML += '</tbody></table></div>';
+            
+            container.innerHTML = tableHTML;
+            document.getElementById('grading-table-container').style.display = 'block';
+        }
+
+        // Utility functions
+        function showError(message) {
+            const container = document.getElementById('error-container');
+            container.innerHTML = `<div class="error">Error: ${message}</div>`;
+        }
+
+        function showInfo(message) {
+            const container = document.getElementById('error-container');
+            container.innerHTML = `<div class="info">${message}</div>`;
+        }
+
+        function clearErrors() {
+            document.getElementById('error-container').innerHTML = '';
+        }
+    </script>
+</body>
+</html>
