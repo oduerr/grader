@@ -1,0 +1,29 @@
+{
+    "workbench.startupEditor": "readme",
+    "files.associations": {
+        "*.tsv": "plaintext",
+        "*.txt": "plaintext"
+    },
+    "project.description": "HTWG Grade Calculator - Single-page HTML+JS application for calculating and analyzing student grades",
+    "project.status": "Phase 8 Complete - Fully functional grading application",
+    "project.features": [
+        "Excel/TSV file upload and processing",
+        "Interactive P1/P4 threshold sliders",
+        "Visual feedback (ECDF charts, histograms)",
+        "ID matching and grade alignment workflow",
+        "Clipboard export functionality",
+        "Complete test data suite"
+    ],
+    "project.keyFiles": {
+        "main": "index.html",
+        "specs": "requirements.md",
+        "testData": "test-data/",
+        "grading": "test-data/test_grading_data.txt",
+        "studentIds": "test-data/test_student_ids.txt"
+    },
+    "project.testData": {
+        "description": "10 students with IDs 10-100, total points = student ID",
+        "testIds": "10,20,50,70,80,898 (898 tests 'not found' functionality)"
+    },
+    "project.repository": "https://github.com/oduerr/grader"
+}
