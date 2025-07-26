@@ -438,6 +438,14 @@
             transform: none;
         }
 
+        .action-btn.copy-all-btn {
+            background: #28a745;
+        }
+
+        .action-btn.copy-all-btn:hover {
+            background: #218838;
+        }
+
         /* ID Match Table */
         .id-match-container {
             background: white;
@@ -563,6 +571,12 @@
             
             .stat-value {
                 font-size: 1.2rem;
+            }
+            
+            /* Phase 7 - Responsive button layout */
+            .action-btn {
+                flex: 1;
+                min-width: 120px;
             }
         }
     </style>
@@ -700,7 +714,13 @@
             </div>
             
             <div style="margin-top: 15px; margin-bottom: 15px;">
-                <button id="copy-aligned-grades-btn" class="action-btn" style="display: none;">Copy Grades to Clipboard</button>
+                <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+                    <button id="copy-aligned-grades-btn" class="action-btn" style="display: none;">Copy Grades to Clipboard</button>
+                    <button id="copy-all-data-btn" class="action-btn copy-all-btn" style="display: none;" title="Copy both Student IDs and Grades for archival">Copy All to Clipboard</button>
+                </div>
+                <small style="color: #666; font-size: 0.85em; margin-top: 5px; display: block;">
+                    "Copy All" includes both Student IDs and Grades in tab-separated format for easy pasting into Excel or saving as reference.
+                </small>
             </div>
             <div style="margin-top: 15px; color: #666; font-size: 0.9em;">
                 <em>Rows marked with stripes indicate student IDs not found in the grading data.</em>
@@ -768,6 +788,9 @@
         // Phase 4 - ID matching event listener
         document.getElementById('process-and-copy-btn').addEventListener('click', handleProcessAndCopy);
         document.getElementById('copy-aligned-grades-btn').addEventListener('click', handleCopyAlignedGrades);
+        
+        // Phase 7 - Copy all data event listener
+        document.getElementById('copy-all-data-btn').addEventListener('click', handleCopyAllData);
         
         // Phase 5 - Copy formula event listener
         document.getElementById('copy-formula-btn').addEventListener('click', handleCopyFormula);
@@ -1358,6 +1381,7 @@
             container.innerHTML = tableHTML;
             document.getElementById('id-match-container').style.display = 'block';
             document.getElementById('copy-aligned-grades-btn').style.display = 'inline-block';
+            document.getElementById('copy-all-data-btn').style.display = 'inline-block';
             
             // Phase 5: Update alignment statistics
             updateAlignmentStats();
@@ -1387,6 +1411,41 @@
                 try {
                     document.execCommand('copy');
                     showInfo('Copied ' + alignedGradeData.length + ' grades to clipboard (empty lines for missing students)');
+                } catch (fallbackError) {
+                    showError('Failed to copy to clipboard. Please copy manually from the table.');
+                }
+                document.body.removeChild(textArea);
+            }
+        }
+
+        // Phase 7 - Copy all data (Student ID + Grade) for archival
+        async function handleCopyAllData() {
+            if (alignedGradeData.length === 0) {
+                showError('No aligned grade data available. Please process student IDs first.');
+                return;
+            }
+            
+            // Create tab-separated data with header
+            const header = 'Student_ID\tGrade';
+            const dataRows = alignedGradeData.map(student => {
+                const grade = student.found ? student.grade.toFixed(1) : '';
+                return student.mtknr + '\t' + grade;
+            });
+            
+            const allData = [header, ...dataRows].join('\n');
+            
+            try {
+                await navigator.clipboard.writeText(allData);
+                showInfo('Copied ' + alignedGradeData.length + ' student records (ID + Grade) to clipboard for archival');
+            } catch (error) {
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = allData;
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    showInfo('Copied ' + alignedGradeData.length + ' student records (ID + Grade) to clipboard for archival');
                 } catch (fallbackError) {
                     showError('Failed to copy to clipboard. Please copy manually from the table.');
                 }
