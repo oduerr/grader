@@ -92,6 +92,16 @@ See individual phase documentation in `README-Phase*.md` files for detailed deve
 
 The repository includes `Matrikel_Punkte.xlsx` as sample data for testing the application.
 
+## 🧪 Testing
+
+The `test-data/` directory contains sample files for testing all features:
+
+- **`test_grading_data.txt`**: Tab-separated sample grading data with 10 students
+- **`test_student_ids.txt`**: Sample student ID list for testing the ID matching workflow
+- **`README.md`**: Detailed testing instructions and expected results
+
+Use these files to quickly test the application without needing your own data.
+
 ## 🤝 Contributing
 
 This is an educational project for HTWG. Feel free to fork and adapt for your needs.
