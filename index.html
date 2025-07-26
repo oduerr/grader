@@ -482,6 +482,89 @@
                 width: 100%;
             }
         }
+
+        /* Phase 5 - Alignment Statistics */
+        .id-match-stats {
+            background: var(--background-color);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            box-shadow: var(--shadow);
+        }
+
+        .id-match-stats h3 {
+            color: var(--accent-color);
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+            font-weight: 500;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: var(--border-radius);
+            border: 1px solid #e9ecef;
+        }
+
+        .stat-value {
+            display: block;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--accent-color);
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .excel-formula-section {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: var(--border-radius);
+            border: 1px solid #e9ecef;
+        }
+
+        .excel-formula-input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            background: white;
+        }
+
+        .excel-formula-input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 2px rgba(0, 101, 189, 0.1);
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+            
+            .stat-item {
+                padding: 10px;
+            }
+            
+            .stat-value {
+                font-size: 1.2rem;
+            }
+        }
     </style>
 </head>
 <body>
@@ -579,6 +662,43 @@
         <div id="id-match-container" class="id-match-container" style="display: none;">
             <h2>Grade Alignment (University Excel Order)</h2>
             <div id="id-match-content"></div>
+            
+            <!-- Phase 5: Grade Alignment Statistics -->
+            <div id="id-match-stats" class="id-match-stats" style="display: none; margin-top: 20px;">
+                <h3>Alignment Statistics</h3>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <span class="stat-value" id="alignment-mean">--</span>
+                        <div class="stat-label">Mean Grade</div>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value" id="alignment-pass-rate">--</span>
+                        <div class="stat-label">Pass Rate</div>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value" id="alignment-pass-count">--</span>
+                        <div class="stat-label">Students Passed</div>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value" id="alignment-checksum">--</span>
+                        <div class="stat-label">Checksum</div>
+                    </div>
+                </div>
+                
+                <div class="excel-formula-section" style="margin-top: 15px;">
+                    <label for="excel-formula" style="display: block; margin-bottom: 5px; font-weight: 500; color: var(--accent-color);">
+                        Excel Checksum Formula (copy & paste):
+                    </label>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <input type="text" id="excel-formula" readonly class="excel-formula-input" value="=AVERAGE(F6:F20 * G6:G20)">
+                        <button id="copy-formula-btn" class="action-btn" style="padding: 5px 10px; font-size: 0.9rem;">Copy Formula</button>
+                    </div>
+                    <small style="color: #666; font-size: 0.85em; margin-top: 5px; display: block;">
+                        Adjust cell ranges (F6:F20, G6:G20) to match your Excel data. F=Student IDs, G=Grades.
+                    </small>
+                </div>
+            </div>
+            
             <div style="margin-top: 15px; margin-bottom: 15px;">
                 <button id="copy-aligned-grades-btn" class="action-btn" style="display: none;">Copy Grades to Clipboard</button>
             </div>
@@ -648,6 +768,9 @@
         // Phase 4 - ID matching event listener
         document.getElementById('process-and-copy-btn').addEventListener('click', handleProcessAndCopy);
         document.getElementById('copy-aligned-grades-btn').addEventListener('click', handleCopyAlignedGrades);
+        
+        // Phase 5 - Copy formula event listener
+        document.getElementById('copy-formula-btn').addEventListener('click', handleCopyFormula);
 
         function handleFileUpload(event) {
             const file = event.target.files[0];
@@ -742,7 +865,7 @@
                 updateSummaryStats();
                 updateCharts(); // Phase 3: Create initial charts
                 
-                showInfo(`Successfully loaded ${gradingData.length} students from the Excel file`);
+                showInfo('Successfully loaded ' + gradingData.length + ' students from the Excel file');
 
             } catch (error) {
                 showError('Error processing grading data: ' + error.message);
@@ -1202,7 +1325,7 @@
             // Display the aligned table
             displayIdMatchTable();
             
-            showInfo(`Processed ${studentIdList.length} student IDs (${alignedGradeData.filter(d => d.found).length} matches found). Use the "Copy Grades" button below to copy to clipboard.`);
+            showInfo('Processed ' + studentIdList.length + ' student IDs (' + alignedGradeData.filter(d => d.found).length + ' matches found). Use the "Copy Grades" button below to copy to clipboard.');
         }
 
         // Phase 4 - Display the ID-aligned grade table
@@ -1235,6 +1358,9 @@
             container.innerHTML = tableHTML;
             document.getElementById('id-match-container').style.display = 'block';
             document.getElementById('copy-aligned-grades-btn').style.display = 'inline-block';
+            
+            // Phase 5: Update alignment statistics
+            updateAlignmentStats();
         }
 
         // Phase 4 - Copy grades from alignment table
@@ -1251,7 +1377,7 @@
             
             try {
                 await navigator.clipboard.writeText(gradeText);
-                showInfo(`Copied ${alignedGradeData.length} grades to clipboard (empty lines for missing students)`);
+                showInfo('Copied ' + alignedGradeData.length + ' grades to clipboard (empty lines for missing students)');
             } catch (error) {
                 // Fallback for older browsers
                 const textArea = document.createElement('textarea');
@@ -1260,7 +1386,7 @@
                 textArea.select();
                 try {
                     document.execCommand('copy');
-                    showInfo(`Copied ${alignedGradeData.length} grades to clipboard (empty lines for missing students)`);
+                    showInfo('Copied ' + alignedGradeData.length + ' grades to clipboard (empty lines for missing students)');
                 } catch (fallbackError) {
                     showError('Failed to copy to clipboard. Please copy manually from the table.');
                 }
@@ -1268,15 +1394,93 @@
             }
         }
 
+        // Phase 5 - Update alignment statistics
+        function updateAlignmentStats() {
+            if (alignedGradeData.length === 0) return;
+            
+            // Filter out students that were not found
+            const foundStudents = alignedGradeData.filter(student => student.found);
+            
+            if (foundStudents.length === 0) {
+                // No students found, show zeros
+                document.getElementById('alignment-mean').textContent = '--';
+                document.getElementById('alignment-pass-rate').textContent = '--';
+                document.getElementById('alignment-pass-count').textContent = '0';
+                document.getElementById('alignment-checksum').textContent = '--';
+                document.getElementById('id-match-stats').style.display = 'none';
+                return;
+            }
+            
+            // Calculate statistics
+            const grades = foundStudents.map(student => student.grade);
+            const mean = grades.reduce((sum, grade) => sum + grade, 0) / grades.length;
+            const passCount = grades.filter(grade => grade <= 4.0).length;
+            const passRate = (passCount / grades.length) * 100;
+            
+            // Calculate checksum: average of (studentId * grade) for found students
+            const checksumSum = foundStudents.reduce((sum, student) => {
+                const id = parseInt(student.mtknr) || 0;
+                return sum + (id * student.grade);
+            }, 0);
+            const checksum = checksumSum / foundStudents.length;
+            
+            // Update display
+            document.getElementById('alignment-mean').textContent = mean.toFixed(2);
+            document.getElementById('alignment-pass-rate').textContent = passRate.toFixed(1) + '%';
+            document.getElementById('alignment-pass-count').textContent = `${passCount}/${foundStudents.length}`;
+            document.getElementById('alignment-checksum').textContent = checksum.toFixed(0);
+            
+            // Update Excel formula with dynamic range
+            updateExcelFormula();
+            
+            // Show the statistics section
+            document.getElementById('id-match-stats').style.display = 'block';
+        }
+
+        // Phase 5 - Update Excel formula with correct cell range
+        function updateExcelFormula() {
+            if (alignedGradeData.length === 0) return;
+            
+            // Calculate the range based on the data
+            // Assume Excel starts at row 6 (typical for a table with headers)
+            const startRow = 6;
+            const endRow = startRow + alignedGradeData.length - 1;
+            
+            // Generate formula: =AVERAGE(F6:F20 * G6:G20) where F=IDs, G=Grades
+            const formula = `=AVERAGE(F${startRow}:F${endRow} * G${startRow}:G${endRow})`;
+            
+            document.getElementById('excel-formula').value = formula;
+        }
+
+        // Phase 5 - Copy Excel formula to clipboard
+        async function handleCopyFormula() {
+            const formulaInput = document.getElementById('excel-formula');
+            const formula = formulaInput.value;
+            
+            try {
+                await navigator.clipboard.writeText(formula);
+                showInfo('Excel formula copied to clipboard!');
+            } catch (error) {
+                // Fallback for older browsers
+                formulaInput.select();
+                try {
+                    document.execCommand('copy');
+                    showInfo('Excel formula copied to clipboard!');
+                } catch (fallbackError) {
+                    showError('Failed to copy formula to clipboard. Please copy manually.');
+                }
+            }
+        }
+
         // Utility functions
         function showError(message) {
             const container = document.getElementById('error-container');
-            container.innerHTML = `<div class="error">Error: ${message}</div>`;
+            container.innerHTML = '<div class="error">Error: ' + message + '</div>';
         }
 
         function showInfo(message) {
             const container = document.getElementById('error-container');
-            container.innerHTML = `<div class="info">${message}</div>`;
+            container.innerHTML = '<div class="info">' + message + '</div>';
         }
 
         function clearErrors() {

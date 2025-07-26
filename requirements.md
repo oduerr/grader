@@ -145,3 +145,9 @@ Bring in exploratory plots.
 1. Add link in header to the GitHub repo.
 2. Sliders for P1 and P4 should have 0.5 increments and it should be possible to set them manually by typing.
 
+### Phase 6 Polishing
+3. In the Grade Alignment (University Excel Order) table add mean, pass rate, pass number, and also a checksum calculated of the mean of the student id column multiplied by the grade column in excel that would be =AVERAGE(PRODUCT(F6:F20,G6:G20)) Also add the Excel code in a copy and paste fashion so that the user can copy the formula easily to the Excel sheet.
+
+### Phase 7 Polishing
+At the position copy grades to clipboard make another button saying copy all to clipboard. The idea of it would be that the final grades together with the Student ID could then be stored by the user for later reference.
+
