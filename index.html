@@ -592,8 +592,8 @@
         
         <div class="control-bar">
             <div class="file-input-container">
-                <label for="grading-file">Upload Grading Excel File (.xlsx)</label>
-                <input type="file" id="grading-file" accept=".xlsx" />
+                <label for="grading-file">Upload Grading File (.xlsx or .txt/.tsv)</label>
+                <input type="file" id="grading-file" accept=".xlsx,.txt,.tsv" />
             </div>
             
             <!-- Phase 2: Interactive sliders -->
@@ -801,32 +801,49 @@
 
             clearErrors();
 
-            if (!file.name.endsWith('.xlsx')) {
-                showError('Please select an Excel file (.xlsx)');
+            const fileName = file.name.toLowerCase();
+            const isExcel = fileName.endsWith('.xlsx');
+            const isTabSeparated = fileName.endsWith('.txt') || fileName.endsWith('.tsv');
+
+            if (!isExcel && !isTabSeparated) {
+                showError('Please select an Excel file (.xlsx) or tab-separated file (.txt, .tsv)');
                 return;
             }
 
             const reader = new FileReader();
             reader.onload = function(e) {
                 try {
-                    const workbook = XLSX.read(e.target.result, { type: 'binary' });
-                    const firstSheetName = workbook.SheetNames[0];
-                    const worksheet = workbook.Sheets[firstSheetName];
+                    let jsonData;
                     
-                    // Convert to JSON
-                    const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                    if (isExcel) {
+                        // Handle Excel files
+                        const workbook = XLSX.read(e.target.result, { type: 'binary' });
+                        const firstSheetName = workbook.SheetNames[0];
+                        const worksheet = workbook.Sheets[firstSheetName];
+                        jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                    } else {
+                        // Handle tab-separated files
+                        const text = e.target.result;
+                        const lines = text.split('\n').filter(line => line.trim().length > 0);
+                        jsonData = lines.map(line => line.split('\t'));
+                    }
                     
                     if (jsonData.length < 2) {
-                        showError('Excel file must contain at least a header row and one data row');
+                        showError('File must contain at least a header row and one data row');
                         return;
                     }
 
                     processGradingData(jsonData);
                 } catch (error) {
-                    showError('Error reading Excel file: ' + error.message);
+                    showError('Error reading file: ' + error.message);
                 }
             };
-            reader.readAsBinaryString(file);
+            
+            if (isExcel) {
+                reader.readAsBinaryString(file);
+            } else {
+                reader.readAsText(file);
+            }
         }
 
         function processGradingData(rawData) {

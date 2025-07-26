@@ -151,3 +151,8 @@ Bring in exploratory plots.
 ### Phase 7 Polishing
 At the position copy grades to clipboard make another button saying copy all to clipboard. The idea of it would be that the final grades together with the Student ID could then be stored by the user for later reference.
 
+### Phase 8 Polishing
+**File format extension and test data:**
+1. Extend file upload to accept tab-separated text files (`.txt`, `.tsv`) in addition to Excel files
+2. Create test grading data file: 10 students, 4 tasks (max 5 points each), tab-separated format, using only full points and half points (0, 0.5, 1.0, 1.5, 2.0, etc.)
+3. Create test student ID file: Simple text file with one ID per line, containing some (but not all) student IDs from grading file plus some additional IDs not in grading file, in different order - for testing the filtering and missing student functionality
