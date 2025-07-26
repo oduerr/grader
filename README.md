@@ -31,16 +31,8 @@ Your Excel file should have the following structure:
 
 ## 🎯 Grading Formula
 
-The application uses the HTWG grading formula:
+The application uses the HTWG grading formula
 
-```
-raw_note = 3/(P4 - P1) × points + [1 - 3×P1/(P4 - P1)]
-```
-
-Where:
-- **P1**: Points required for grade 1.0 (excellent)
-- **P4**: Points required for grade 4.0 (sufficient)
-- **points**: Total points achieved by student
 
 Final grades are mapped to discrete values: 1.0, 1.3, 1.7, 2.0, 2.3, 2.7, 3.0, 3.3, 3.7, 4.0, 5.0
 You pass if the final grade is less than or equal to 4.15.
@@ -52,13 +44,13 @@ You pass if the final grade is less than or equal to 4.15.
 - **External Libraries**: 
   - [SheetJS](https://sheetjs.com/) for Excel file processing
   - [Chart.js](https://www.chartjs.org/) for interactive visualizations
-- **Responsive Design**: Mobile-friendly interface
 - **No Server Required**: Runs entirely in the browser
+
 
 
 ## 🤝 Contributing
 
-This is an educational project for HTWG. Feel free to fork and adapt for your needs.
+This is an educational project for HTWG. Feel free to fork and adapt for your needs and give feedback.
 
 ## 📄 License
 
