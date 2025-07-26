@@ -94,11 +94,12 @@ The repository includes `Matrikel_Punkte.xlsx` as sample data for testing the ap
 
 ## 📚 Documentation
 
-Comprehensive documentation is available in the `docs/` directory:
+**Quick Start (German)**: 
+- **[📋 Anleitung für Dozenten](docs/README.md)** - 7-Schritte Workflow für HTWG Notenberechnung
+- **[📋 View on GitHub](https://github.com/oduerr/grader/blob/main/docs/README.md)** - Online readable version
 
-- **[User Guide](docs/user-guide.md)** - Complete step-by-step instructions for instructors
-- **[Quick Reference](docs/quick-reference.md)** - 5-minute getting started guide  
-- **[User Story](docs/user-story.md)** - Real-world workflow example
+**Detailed Documentation**:
+- **[User Guide](docs/user-guide.md)** - Complete step-by-step instructions (English)
 - **[Test Data](test-data/README.md)** - Sample files for testing
 
 ## 🤝 Contributing
