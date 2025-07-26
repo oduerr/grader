@@ -975,8 +975,8 @@
             const totalGrades = gradingData.reduce((sum, student) => sum + student.grade, 0);
             const averageGrade = totalGrades / gradingData.length;
             
-            // Calculate pass rate (grade < 4.15)
-            const passCount = gradingData.filter(student => student.grade < 4.15).length;
+            // Calculate pass rate (grade <= 4.15)
+            const passCount = gradingData.filter(student => student.grade <= 4.15).length;
             const passRate = (passCount / gradingData.length) * 100;
             
             // Update display
@@ -1048,13 +1048,20 @@
                         data: counts,
                         backgroundColor: labels.map(label => {
                             const pointValue = parseFloat(label);
-                            // Simple red/green based on P4 threshold (passing/failing)
-                            if (pointValue >= currentP4) return 'rgba(40, 167, 69, 0.8)'; // Green for passing
+                            // Calculate what grade this point value would result in
+                            const rawNote = calculateRawNote(pointValue, currentP1, currentP4);
+                            const finalGrade = mapToDiscreteGrade(rawNote);
+                            // Use same logic as grade histogram: grade <= 4.15 for passing
+                            if (finalGrade <= 4.15) return 'rgba(40, 167, 69, 0.8)'; // Green for passing
                             else return 'rgba(220, 53, 69, 0.8)'; // Red for failing
                         }),
                         borderColor: labels.map(label => {
                             const pointValue = parseFloat(label);
-                            if (pointValue >= currentP4) return '#28a745'; // Green for passing
+                            // Calculate what grade this point value would result in
+                            const rawNote = calculateRawNote(pointValue, currentP1, currentP4);
+                            const finalGrade = mapToDiscreteGrade(rawNote);
+                            // Use same logic as grade histogram: grade <= 4.15 for passing
+                            if (finalGrade <= 4.15) return '#28a745'; // Green for passing
                             else return '#dc3545'; // Red for failing
                         }),
                         borderWidth: 1
@@ -1173,12 +1180,12 @@
                         data: counts,
                         backgroundColor: labels.map(grade => {
                             const gradeNum = parseFloat(grade);
-                            if (gradeNum < 4.15) return 'rgba(40, 167, 69, 0.8)'; // Green for passing
+                            if (gradeNum <= 4.15) return 'rgba(40, 167, 69, 0.8)'; // Green for passing
                             else return 'rgba(220, 53, 69, 0.8)'; // Red for failing
                         }),
                         borderColor: labels.map(grade => {
                             const gradeNum = parseFloat(grade);
-                            if (gradeNum < 4.15) return '#28a745'; // Green for passing
+                            if (gradeNum <= 4.15) return '#28a745'; // Green for passing
                             else return '#dc3545'; // Red for failing
                         }),
                         borderWidth: 1

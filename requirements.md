@@ -156,3 +156,6 @@ At the position copy grades to clipboard make another button saying copy all to 
 1. Extend file upload to accept tab-separated text files (`.txt`, `.tsv`) in addition to Excel files
 2. Create test grading data file: 10 students, 4 tasks (max 5 points each), tab-separated format, using only full points and half points (0, 0.5, 1.0, 1.5, 2.0, etc.)
 3. Create test student ID file: Simple text file with one ID per line, containing some (but not all) student IDs from grading file plus some additional IDs not in grading file, in different order - for testing the filtering and missing student functionality
+
+### Phase 9 Change Request
+The ECDF of Points (pkt) is a bit misleading and hard to interpret. Do the same as in Grade Frequency Distribution but with Points (pkt) instead of Grades. The idea is to have a visual representation of the distribution of points. Keep the position of the P1 and P4 thresholds and the live update functionality.
