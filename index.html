@@ -949,7 +949,7 @@
                 // Update P4 slider max to ensure P4 < P1
                 p4Slider.max = newP4Max;
                 p4Input.max = newP4Max;
-                document.getElementById('p4-range-info').textContent = `Range: ${p4Slider.min}-${newP4Max} points`;
+                document.getElementById('p4-range-info').textContent = 'Range: ' + p4Slider.min + '-' + newP4Max + ' points';
                 
             } else if (sliderId === 'p4-slider') {
                 currentP4 = value;
@@ -969,7 +969,7 @@
                 // Update P1 slider min to ensure P1 > P4
                 p1Slider.min = newP1Min;
                 p1Input.min = newP1Min;
-                document.getElementById('p1-range-info').textContent = `Range: ${newP1Min}-${p1Slider.max} points`;
+                document.getElementById('p1-range-info').textContent = 'Range: ' + newP1Min + '-' + p1Slider.max + ' points';
             }
             
             // Recalculate grades if data is loaded
@@ -1275,47 +1275,43 @@
             const minPoints = Math.min(...points);
             const maxPoints = Math.max(...points);
             
-            // Set P1 slider range (should be in upper range of points)
-            const p1Min = Math.max(minPoints, Math.ceil(maxPoints * 0.6)); // At least 60% of max points
-            const p1Max = Math.max(maxPoints, p1Min + 10); // Ensure some range
-            
-            // Set P4 slider range (should be in lower range of points, but less than P1)
-            const p4Min = Math.max(1, minPoints);
-            const p4Max = Math.min(p1Min - 0.5, Math.ceil(maxPoints * 0.8)); // Max 80% of max points, less than P1 min
+            // Both sliders go from minimum to maximum points
+            const sliderMin = Math.max(0, Math.floor(minPoints));
+            const sliderMax = Math.ceil(maxPoints) + 2; // Add small buffer
             
             // Update P1 slider and input
             const p1Slider = document.getElementById('p1-slider');
             const p1Input = document.getElementById('p1-input');
-            p1Slider.min = p1Min;
-            p1Slider.max = p1Max;
-            p1Input.min = p1Min;
-            p1Input.max = p1Max;
+            p1Slider.min = sliderMin;
+            p1Slider.max = sliderMax;
+            p1Input.min = sliderMin;
+            p1Input.max = sliderMax;
             
             // Set reasonable default for P1 (around 75% of max points)
-            const p1Default = Math.min(p1Max, Math.max(p1Min, Math.ceil(maxPoints * 0.75)));
+            const p1Default = Math.ceil(maxPoints * 0.75);
             p1Slider.value = p1Default;
             p1Input.value = p1Default;
             currentP1 = p1Default;
-            document.getElementById('p1-range-info').textContent = `Range: ${p1Min}-${p1Max} points`;
+            document.getElementById('p1-range-info').textContent = 'Range: ' + sliderMin + '-' + sliderMax + ' points';
             
             // Update P4 slider and input
             const p4Slider = document.getElementById('p4-slider');
             const p4Input = document.getElementById('p4-input');
-            p4Slider.min = p4Min;
-            p4Slider.max = p4Max;
-            p4Input.min = p4Min;
-            p4Input.max = p4Max;
+            p4Slider.min = sliderMin;
+            p4Slider.max = sliderMax;
+            p4Input.min = sliderMin;
+            p4Input.max = sliderMax;
             
             // Set reasonable default for P4 (around 40% of max points)
-            const p4Default = Math.min(p4Max, Math.max(p4Min, Math.ceil(maxPoints * 0.4)));
+            const p4Default = Math.ceil(maxPoints * 0.4);
             p4Slider.value = p4Default;
             p4Input.value = p4Default;
             currentP4 = p4Default;
-            document.getElementById('p4-range-info').textContent = `Range: ${p4Min}-${p4Max} points`;
+            document.getElementById('p4-range-info').textContent = 'Range: ' + sliderMin + '-' + sliderMax + ' points';
             
-            console.log(`Data range: ${minPoints}-${maxPoints} points`);
-            console.log(`P1 range: ${p1Min}-${p1Max}, default: ${p1Default}`);
-            console.log(`P4 range: ${p4Min}-${p4Max}, default: ${p4Default}`);
+            console.log('Data range: ' + minPoints + '-' + maxPoints + ' points');
+            console.log('P1 range: ' + sliderMin + '-' + sliderMax + ', default: ' + p1Default);
+            console.log('P4 range: ' + sliderMin + '-' + sliderMax + ', default: ' + p4Default);
         }
 
         // Phase 4 - Combined Process and Copy function
@@ -1597,7 +1593,7 @@
                 }
                 p4Slider.max = newP4Max;
                 p4Input.max = newP4Max;
-                document.getElementById('p4-range-info').textContent = `Range: ${p4Slider.min}-${newP4Max} points`;
+                document.getElementById('p4-range-info').textContent = 'Range: ' + p4Slider.min + '-' + newP4Max + ' points';
                 
             } else if (inputId === 'p4-input') {
                 const p4Slider = document.getElementById('p4-slider');
@@ -1625,7 +1621,7 @@
                 }
                 p1Slider.min = newP1Min;
                 p1Input.min = newP1Min;
-                document.getElementById('p1-range-info').textContent = `Range: ${newP1Min}-${p1Slider.max} points`;
+                document.getElementById('p1-range-info').textContent = 'Range: ' + newP1Min + '-' + p1Slider.max + ' points';
             }
             
             // Recalculate grades if data is loaded
