@@ -159,3 +159,6 @@ At the position copy grades to clipboard make another button saying copy all to 
 
 ### Phase 9 Change Request
 The ECDF of Points (pkt) is a bit misleading and hard to interpret. Do the same as in Grade Frequency Distribution but with Points (pkt) instead of Grades. The idea is to have a visual representation of the distribution of points. Keep the position of the P1 and P4 thresholds and the live update functionality.
+
+### Phase 10 Change Request
+Please make the tables sortable. I would like to have all columns sortable in the grading table. The submission tables should not be sortable because the order is important for copying and pasting.

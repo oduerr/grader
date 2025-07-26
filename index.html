@@ -304,6 +304,27 @@
             top: 0;
         }
 
+        /* Phase 10 - Sortable table headers */
+        .sortable-header {
+            cursor: pointer;
+            user-select: none;
+            position: relative;
+            padding-right: 20px;
+        }
+
+        .sortable-header:hover {
+            background-color: #e9ecef;
+        }
+
+        .sort-indicator {
+            position: absolute;
+            right: 5px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.8em;
+            color: #666;
+        }
+
         tr:hover {
             background-color: #f8f9fa;
         }
@@ -777,6 +798,12 @@
         // Phase 4 - ID matching
         let studentIdList = [];
         let alignedGradeData = [];
+        
+        // Phase 10 - Table sorting
+        let sortState = {
+            column: -1,
+            ascending: true
+        };
 
         // Initialize slider values on page load
         document.addEventListener('DOMContentLoaded', function() {
@@ -1006,6 +1033,23 @@
             });
             
             tableBody.innerHTML = tableHTML;
+            
+            // Phase 10 - Update sort indicators in headers
+            updateSortIndicators();
+        }
+
+        // Phase 10 - Update sort indicators in table headers
+        function updateSortIndicators() {
+            const headers = document.querySelectorAll('#grading-table-content th.sortable-header');
+            headers.forEach((header, index) => {
+                const indicator = getSortIndicator(index);
+                // Replace existing sort indicator
+                const existingIndicator = header.querySelector('.sort-indicator');
+                if (existingIndicator) {
+                    existingIndicator.remove();
+                }
+                header.insertAdjacentHTML('beforeend', indicator);
+            });
         }
 
         // Phase 9 - Points histogram with P1/P4 thresholds
@@ -1260,8 +1304,9 @@
             tableHTML += '<thead><tr>';
             enhancedHeaders.forEach((header, index) => {
                 const isComputed = index >= originalHeaders.length;
-                const className = isComputed ? 'computed-column' : '';
-                tableHTML += `<th class="${className}">${header}</th>`;
+                const className = isComputed ? 'computed-column sortable-header' : 'sortable-header';
+                const sortIndicator = getSortIndicator(index);
+                tableHTML += `<th class="${className}" onclick="sortGradingTable(${index})">${header}${sortIndicator}</th>`;
             });
             tableHTML += '</tr></thead>';
             
@@ -1286,6 +1331,86 @@
             
             container.innerHTML = tableHTML;
             document.getElementById('grading-table-container').style.display = 'block';
+        }
+
+        // Phase 10 - Table sorting functions
+        function getSortIndicator(columnIndex) {
+            if (sortState.column !== columnIndex) {
+                return '<span class="sort-indicator">⇅</span>';
+            }
+            return sortState.ascending 
+                ? '<span class="sort-indicator">▲</span>' 
+                : '<span class="sort-indicator">▼</span>';
+        }
+
+        function sortGradingTable(columnIndex) {
+            // Toggle sort direction if same column, otherwise start with ascending
+            if (sortState.column === columnIndex) {
+                sortState.ascending = !sortState.ascending;
+            } else {
+                sortState.column = columnIndex;
+                sortState.ascending = true;
+            }
+
+            // Create a copy of gradingData with original indices for sorting
+            const dataWithIndices = gradingData.map((student, index) => ({
+                ...student,
+                originalIndex: index
+            }));
+
+            // Sort the data
+            dataWithIndices.sort((a, b) => {
+                let valueA, valueB;
+
+                // Get values based on column index
+                if (columnIndex === 0) {
+                    // mtknr column
+                    valueA = a.mtknr;
+                    valueB = b.mtknr;
+                } else if (columnIndex < a.originalRow.length) {
+                    // Original data columns (task scores)
+                    valueA = parseFloat(a.originalRow[columnIndex]) || 0;
+                    valueB = parseFloat(b.originalRow[columnIndex]) || 0;
+                } else {
+                    // Computed columns (pkt, raw_note, grade)
+                    const computedIndex = columnIndex - a.originalRow.length;
+                    switch (computedIndex) {
+                        case 0: // pkt
+                            valueA = a.pkt;
+                            valueB = b.pkt;
+                            break;
+                        case 1: // raw_note
+                            valueA = a.raw_note;
+                            valueB = b.raw_note;
+                            break;
+                        case 2: // grade
+                            valueA = a.grade;
+                            valueB = b.grade;
+                            break;
+                        default:
+                            return 0;
+                    }
+                }
+
+                // Compare values
+                let result;
+                if (typeof valueA === 'string' && typeof valueB === 'string') {
+                    result = valueA.localeCompare(valueB);
+                } else {
+                    result = valueA - valueB;
+                }
+
+                return sortState.ascending ? result : -result;
+            });
+
+            // Update gradingData with sorted order
+            gradingData = dataWithIndices.map(item => {
+                const { originalIndex, ...student } = item;
+                return student;
+            });
+
+            // Re-render the table
+            updateGradingTable();
         }
 
         // Phase 2 - Set dynamic slider ranges based on data
