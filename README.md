@@ -2,7 +2,7 @@
 
 [https://oduerr.github.io/grader/](https://oduerr.github.io/grader/)
 
-<iframe src="https://video.htwg-konstanz.de/Panopto/Pages/Embed.aspx?id=c90020c7-7cbb-4800-b5fb-b326012e2d2c&autoplay=false&offerviewer=true&showtitle=true&showbrand=true&captions=false&interactivity=all" height="405" width="720" style="border: 1px solid #464646;" allowfullscreen allow="autoplay"></iframe>
+🎥 [Watch the demo video on Panopto](https://video.htwg-konstanz.de/Panopto/Pages/Viewer.aspx?id=c90020c7-7cbb-4800-b5fb-b326012e2d2c)
 
 ## 🚀 Quick Start
 

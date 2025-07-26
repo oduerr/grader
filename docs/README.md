@@ -1,5 +1,7 @@
 # HTWG Grade Calculator - Documentation
 
+🎥 [Demo Video auf Panopto](https://video.htwg-konstanz.de/Panopto/Pages/Viewer.aspx?id=c90020c7-7cbb-4800-b5fb-b326012e2d2c)
+
 1. Punkte in Excel oder tab-separierte Textdatei eintragen. Die erste Spalte muss "mtknr" heißen.
 2. Excel-Datei hochladen (Upload Grading File). 
 3. Schieberegler für P1 (1.0) (Anzahl der Punkte für Note 1.0) und P4 (4.0) (Anzahl der Punkte für Note 4.0) anpassen.
