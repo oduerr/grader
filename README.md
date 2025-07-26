@@ -2,6 +2,8 @@
 
 [https://oduerr.github.io/grader/](https://oduerr.github.io/grader/)
 
+<iframe src="https://video.htwg-konstanz.de/Panopto/Pages/Embed.aspx?id=c90020c7-7cbb-4800-b5fb-b326012e2d2c&autoplay=false&offerviewer=true&showtitle=true&showbrand=true&captions=false&interactivity=all" height="405" width="720" style="border: 1px solid #464646;" allowfullscreen allow="autoplay"></iframe>
+
 ## 🚀 Quick Start
 
 1. **Open the App**: Simply open `index.html` in any modern web browser
@@ -11,7 +13,7 @@
 5. **Review Grades**: Check the detailed grading table with all calculations
 6. **Export Data**: Sort the student IDs as in the university excel template
 7. **Copy to Clipboard**: Use the "Copy to Clipboard" button to export the final grades
-
+ 
 See **[docs/README.md](docs/README.md)** for a German quick start guide.
 
 ## 📊 Data Format
