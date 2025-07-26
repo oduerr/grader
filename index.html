@@ -44,6 +44,29 @@
             font-weight: 300;
         }
 
+        .header-container {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .github-link {
+            display: inline-block;
+            margin-top: 10px;
+            color: var(--accent-color);
+            text-decoration: none;
+            font-size: 0.9rem;
+            padding: 5px 10px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            transition: all 0.3s ease;
+        }
+
+        .github-link:hover {
+            background-color: var(--accent-color);
+            color: white;
+            transform: translateY(-1px);
+        }
+
         .control-bar {
             background: white;
             border: 1px solid var(--border-color);
@@ -133,7 +156,7 @@
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
         }
 
-        .slider-value {
+        .slider-input {
             min-width: 60px;
             text-align: center;
             font-weight: 600;
@@ -142,6 +165,13 @@
             padding: 5px 10px;
             border-radius: var(--border-radius);
             border: 1px solid var(--border-color);
+            font-size: 14px;
+        }
+
+        .slider-input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            background: white;
         }
 
         /* Phase 2 - Summary Panel */
@@ -456,7 +486,12 @@
 </head>
 <body>
     <div class="container">
-        <h1>HTWG Grade Calculator</h1>
+        <div class="header-container">
+            <h1>HTWG Grade Calculator</h1>
+            <a href="https://github.com/oduerr/grader" target="_blank" class="github-link">
+                📁 View on GitHub
+            </a>
+        </div>
         
         <div class="control-bar">
             <div class="file-input-container">
@@ -469,16 +504,16 @@
                 <div class="slider-group">
                     <label for="p4-slider">P4 Threshold (Points for Grade 4.0)</label>
                     <div class="slider-wrapper">
-                        <input type="range" id="p4-slider" min="5" max="50" value="10" step="1">
-                        <span class="slider-value" id="p4-value">10</span>
+                        <input type="range" id="p4-slider" min="5" max="50" value="10" step="0.5">
+                        <input type="number" id="p4-input" class="slider-input" min="5" max="50" value="10" step="0.5">
                     </div>
                     <small id="p4-range-info" style="color: #666; font-size: 0.8em;"></small>
                 </div>
                 <div class="slider-group">
                     <label for="p1-slider">P1 Threshold (Points for Grade 1.0)</label>
                     <div class="slider-wrapper">
-                        <input type="range" id="p1-slider" min="10" max="100" value="20" step="1">
-                        <span class="slider-value" id="p1-value">20</span>
+                        <input type="range" id="p1-slider" min="10" max="100" value="20" step="0.5">
+                        <input type="number" id="p1-input" class="slider-input" min="10" max="100" value="20" step="0.5">
                     </div>
                     <small id="p1-range-info" style="color: #666; font-size: 0.8em;"></small>
                 </div>
@@ -594,9 +629,9 @@
         // Initialize slider values on page load
         document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('p1-slider').value = currentP1;
-            document.getElementById('p1-value').textContent = currentP1;
+            document.getElementById('p1-input').value = currentP1;
             document.getElementById('p4-slider').value = currentP4;
-            document.getElementById('p4-value').textContent = currentP4;
+            document.getElementById('p4-input').value = currentP4;
         });
 
         // F1 - File upload handler
@@ -605,6 +640,10 @@
         // Phase 2 - Slider event listeners
         document.getElementById('p1-slider').addEventListener('input', handleSliderChange);
         document.getElementById('p4-slider').addEventListener('input', handleSliderChange);
+        
+        // Phase 5 - Number input event listeners
+        document.getElementById('p1-input').addEventListener('input', handleInputChange);
+        document.getElementById('p4-input').addEventListener('input', handleInputChange);
 
         // Phase 4 - ID matching event listener
         document.getElementById('process-and-copy-btn').addEventListener('click', handleProcessAndCopy);
@@ -727,42 +766,46 @@
         // Phase 2 - F5: Slider change handler
         function handleSliderChange(event) {
             const sliderId = event.target.id;
-            const value = parseInt(event.target.value);
+            const value = parseFloat(event.target.value);
             
             if (sliderId === 'p1-slider') {
                 currentP1 = value;
-                document.getElementById('p1-value').textContent = value;
+                document.getElementById('p1-input').value = value;
                 
                 // Ensure P1 > P4 for valid linear interpolation
                 const p4Slider = document.getElementById('p4-slider');
-                const p4Max = parseInt(p4Slider.max);
-                const newP4Max = Math.min(p4Max, currentP1 - 1);
+                const p4Input = document.getElementById('p4-input');
+                const p4Max = parseFloat(p4Slider.max);
+                const newP4Max = Math.min(p4Max, currentP1 - 0.5);
                 
                 if (currentP4 >= currentP1) {
-                    currentP4 = Math.max(parseInt(p4Slider.min), newP4Max);
+                    currentP4 = Math.max(parseFloat(p4Slider.min), newP4Max);
                     p4Slider.value = currentP4;
-                    document.getElementById('p4-value').textContent = currentP4;
+                    p4Input.value = currentP4;
                 }
                 // Update P4 slider max to ensure P4 < P1
                 p4Slider.max = newP4Max;
+                p4Input.max = newP4Max;
                 document.getElementById('p4-range-info').textContent = `Range: ${p4Slider.min}-${newP4Max} points`;
                 
             } else if (sliderId === 'p4-slider') {
                 currentP4 = value;
-                document.getElementById('p4-value').textContent = value;
+                document.getElementById('p4-input').value = value;
                 
                 // Ensure P1 > P4 for valid linear interpolation
                 const p1Slider = document.getElementById('p1-slider');
-                const p1Min = parseInt(p1Slider.min);
-                const newP1Min = Math.max(p1Min, currentP4 + 1);
+                const p1Input = document.getElementById('p1-input');
+                const p1Min = parseFloat(p1Slider.min);
+                const newP1Min = Math.max(p1Min, currentP4 + 0.5);
                 
                 if (currentP1 <= currentP4) {
-                    currentP1 = Math.min(parseInt(p1Slider.max), newP1Min);
+                    currentP1 = Math.min(parseFloat(p1Slider.max), newP1Min);
                     p1Slider.value = currentP1;
-                    document.getElementById('p1-value').textContent = currentP1;
+                    p1Input.value = currentP1;
                 }
                 // Update P1 slider min to ensure P1 > P4
                 p1Slider.min = newP1Min;
+                p1Input.min = newP1Min;
                 document.getElementById('p1-range-info').textContent = `Range: ${newP1Min}-${p1Slider.max} points`;
             }
             
@@ -1075,30 +1118,36 @@
             
             // Set P4 slider range (should be in lower range of points, but less than P1)
             const p4Min = Math.max(1, minPoints);
-            const p4Max = Math.min(p1Min - 1, Math.ceil(maxPoints * 0.8)); // Max 80% of max points, less than P1 min
+            const p4Max = Math.min(p1Min - 0.5, Math.ceil(maxPoints * 0.8)); // Max 80% of max points, less than P1 min
             
-            // Update P1 slider
+            // Update P1 slider and input
             const p1Slider = document.getElementById('p1-slider');
+            const p1Input = document.getElementById('p1-input');
             p1Slider.min = p1Min;
             p1Slider.max = p1Max;
+            p1Input.min = p1Min;
+            p1Input.max = p1Max;
             
             // Set reasonable default for P1 (around 75% of max points)
             const p1Default = Math.min(p1Max, Math.max(p1Min, Math.ceil(maxPoints * 0.75)));
             p1Slider.value = p1Default;
+            p1Input.value = p1Default;
             currentP1 = p1Default;
-            document.getElementById('p1-value').textContent = p1Default;
             document.getElementById('p1-range-info').textContent = `Range: ${p1Min}-${p1Max} points`;
             
-            // Update P4 slider
+            // Update P4 slider and input
             const p4Slider = document.getElementById('p4-slider');
+            const p4Input = document.getElementById('p4-input');
             p4Slider.min = p4Min;
             p4Slider.max = p4Max;
+            p4Input.min = p4Min;
+            p4Input.max = p4Max;
             
             // Set reasonable default for P4 (around 40% of max points)
             const p4Default = Math.min(p4Max, Math.max(p4Min, Math.ceil(maxPoints * 0.4)));
             p4Slider.value = p4Default;
+            p4Input.value = p4Default;
             currentP4 = p4Default;
-            document.getElementById('p4-value').textContent = p4Default;
             document.getElementById('p4-range-info').textContent = `Range: ${p4Min}-${p4Max} points`;
             
             console.log(`Data range: ${minPoints}-${maxPoints} points`);
@@ -1232,6 +1281,80 @@
 
         function clearErrors() {
             document.getElementById('error-container').innerHTML = '';
+        }
+        
+        // Phase 5 - Number input change handler
+        function handleInputChange(event) {
+            const inputId = event.target.id;
+            const value = parseFloat(event.target.value);
+            
+            // Validate input
+            if (isNaN(value)) return;
+            
+            if (inputId === 'p1-input') {
+                const p1Slider = document.getElementById('p1-slider');
+                const p4Slider = document.getElementById('p4-slider');
+                const p4Input = document.getElementById('p4-input');
+                
+                // Ensure value is within slider bounds
+                const clampedValue = Math.max(parseFloat(p1Slider.min), Math.min(parseFloat(p1Slider.max), value));
+                
+                // Ensure P1 > P4
+                if (clampedValue <= currentP4) {
+                    return; // Don't allow P1 to be <= P4
+                }
+                
+                currentP1 = clampedValue;
+                p1Slider.value = currentP1;
+                event.target.value = currentP1;
+                
+                // Update P4 constraints
+                const newP4Max = Math.min(parseFloat(p4Slider.max), currentP1 - 0.5);
+                if (currentP4 >= currentP1) {
+                    currentP4 = newP4Max;
+                    p4Slider.value = currentP4;
+                    p4Input.value = currentP4;
+                }
+                p4Slider.max = newP4Max;
+                p4Input.max = newP4Max;
+                document.getElementById('p4-range-info').textContent = `Range: ${p4Slider.min}-${newP4Max} points`;
+                
+            } else if (inputId === 'p4-input') {
+                const p4Slider = document.getElementById('p4-slider');
+                const p1Slider = document.getElementById('p1-slider');
+                const p1Input = document.getElementById('p1-input');
+                
+                // Ensure value is within slider bounds
+                const clampedValue = Math.max(parseFloat(p4Slider.min), Math.min(parseFloat(p4Slider.max), value));
+                
+                // Ensure P4 < P1
+                if (clampedValue >= currentP1) {
+                    return; // Don't allow P4 to be >= P1
+                }
+                
+                currentP4 = clampedValue;
+                p4Slider.value = currentP4;
+                event.target.value = currentP4;
+                
+                // Update P1 constraints
+                const newP1Min = Math.max(parseFloat(p1Slider.min), currentP4 + 0.5);
+                if (currentP1 <= currentP4) {
+                    currentP1 = newP1Min;
+                    p1Slider.value = currentP1;
+                    p1Input.value = currentP1;
+                }
+                p1Slider.min = newP1Min;
+                p1Input.min = newP1Min;
+                document.getElementById('p1-range-info').textContent = `Range: ${newP1Min}-${p1Slider.max} points`;
+            }
+            
+            // Recalculate grades if data is loaded
+            if (gradingData.length > 0) {
+                calculateGrades();
+                updateGradingTable();
+                updateSummaryStats();
+                updateCharts(); // Phase 3: Update charts
+            }
         }
     </script>
 </body>

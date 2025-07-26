@@ -141,15 +141,7 @@ Bring in exploratory plots.
 - Implement **F9**  (textarea for pasted student IDs, reorder table, add blank rows, grey out unmatched).  
 - Implement **F10** (single “Copy grades” button that copies the aligned `grade` column).
 
----
-
-### 🟥 Phase 5 + – Enhancements / polish
-
-- Input validation (e.g. warn if P1 ≤ P4 or duplicate IDs).  
-- Optional exports (PDF report).  
-- Dark-mode toggle.  
-- Editable bin/grade mapping table.  
-- Persist last-used thresholds in `localStorage`. 
-
-------------------------------------------------------------------------
+### Phase 5 Polishing 
+1. Add link in header to the GitHub repo.
+2. Sliders for P1 and P4 should have 0.5 increments and it should be possible to set them manually by typing.
 
