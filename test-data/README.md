@@ -4,7 +4,7 @@ This directory contains test data files for testing the grade calculator functio
 
 ## Test Files
 
-### `test_grading_data.txt`
+## `test_grading_data.txt`
 - **Format**: Tab-separated values (.tsv format)
 - **Students**: 10 students with simple IDs (10, 20, 30, 40, 50, 60, 70, 80, 90, 100) in random order
 - **Tasks**: 4 tasks per student
@@ -20,5 +20,9 @@ This directory contains test data files for testing the grade calculator functio
   - ID matching and reordering functionality
   - Grade alignment and copying features
 
-## Values
+### Values
 For P4=40 and P1=75 the and the ids they checksum should be 94.2 (displayed as 94 in the UI). The mean should be 94.2 and pass rate should be 60%.
+
+
+## `linear_interpolation_test.tsv` Linear interpolation test data
+Values from 1 pkt (student ID 1) to 100 pkt (student ID 100) with 1 point increments.

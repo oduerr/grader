@@ -1,8 +1,8 @@
-# Quick Reference: HTWG Grade Calculator
+## Quick Reference: HTWG Grade Calculator
 
-## 🚀 5-Minute Quick Start
 
 ### 1. Prepare Your File
+And all the points for all tasks in a single file.
 - First column: **mtknr** (student IDs)
 - Other columns: Task scores (numbers only)
 - Save as Excel (`.xlsx`) or tab-separated text (`.txt`, `.tsv`)
@@ -20,37 +20,21 @@
 - Click "Copy Grades to Clipboard"
 - Paste into university Excel template
 
----
 
-## 📋 File Format Template
+## 📋 File Formats 
 
+File with points (you need to upload) either Excel or tab-separated text file  following structure:
 ```
-mtknr   Task1   Task2   Task3   Total_Points   Grade
-12345   8.5     7.2     9.1     24.8          2.3
-67890   6.8     8.9     7.5     23.2          2.7
+mtknr   Task1   Task2   Task3   
+12345   8.5     7     9.0     
+67890   6.5     8     7.5     
 ```
 *(Total_Points and Grade are calculated automatically)*
 
----
+![HIS in One Demo](his_in_one_file.png)
 
-## ⚡ Keyboard Shortcuts
+*In the above example, column **F** contains the student IDs that need to be copied into the app. Once the grades are calculated, the results should be copied back into column **G**.*
 
-- **Upload**: Click file input or drag & drop
-- **Copy Grades**: Ctrl/Cmd+C after clicking copy button
-- **Slider Adjustment**: Use number inputs for precise values
-
----
-
-## ✅ Checklist Before Submission
-
-- [ ] P1/P4 thresholds set appropriately
-- [ ] Pass rate looks reasonable (check summary panel)
-- [ ] University student IDs pasted and processed
-- [ ] Grades copied to university Excel template
-- [ ] Excel checksum formula verified
-- [ ] Backup copy saved ("Copy All to Clipboard")
-
----
 
 ## 🔧 Common Issues
 
@@ -62,5 +46,3 @@ mtknr   Task1   Task2   Task3   Total_Points   Grade
 | Missing students in output | Normal - these students not in your grading file |
 
 ---
-
-*For detailed instructions, see `docs/user-guide.md`*
