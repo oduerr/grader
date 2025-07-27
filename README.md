@@ -28,7 +28,7 @@ The HTWG grading formula maps continuous scores to grades using linear interpola
 
 ## 🛠 Technical Details
 
-- **Developed with AI Assistance** This was an exercise in agent-based programming. The key was to use the [requirements file](requirements.md) to instruct the agent what to do. The programming was done using VS Code and Claude Sonnet 4.0. The requirements file was generated itself with the help of OpenAI's ChatGPT after a discussion with the agent about the requirements. See the [development documentation](development/README.md) for more details.
+- **Developed with AI Assistance** This was an exercise in agent-based programming. The key was to use the [requirements file](requirements.md) to instruct the agent what to do. The programming was done using VS Code and Claude Sonnet 4.0. The requirements file was generated itself with the help of OpenAI's ChatGPT after a discussion with it about the requirements. See the [development documentation](development/README.md) for more details.
 - **Single File Application**: No installation required, works offline. You can run it directly from the `index.html` file or use the GitHub Pages link above.
 - **Browser-Based**: Runs entirely in modern web browsers w/o server communication, no data sent to any server.
 - **External Libraries**:
