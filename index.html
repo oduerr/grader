@@ -607,6 +607,47 @@
                 min-width: 120px;
             }
         }
+
+        /* Loading Overlay */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.7);
+            z-index: 1000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        .spinner {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid var(--accent-color);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .loading-text {
+            color: var(--accent-color);
+            font-weight: 500;
+            font-size: 1.2rem;
+        }
     </style>
 </head>
 
@@ -687,9 +728,17 @@
             </div>
         </div>
 
-        <div id="grading-table-container" class="table-container" style="display: none;">
+        <div id="grading-table-container" class="table-container"
+            style="display: none; padding-bottom: 0; border-bottom: none; border-radius: var(--border-radius) var(--border-radius) 0 0;">
             <h2>Grading Table</h2>
             <div id="grading-table-content"></div>
+        </div>
+
+        <!-- Pagination Controls (Hidden by default) -->
+        <div id="pagination-controls" class="pagination-controls" style="display: none;">
+            <button id="prev-page-btn" class="pagination-btn" onclick="changePage(-1)">Previous</button>
+            <span id="pagination-info" class="pagination-info">Page 1 / 1</span>
+            <button id="next-page-btn" class="pagination-btn" onclick="changePage(1)">Next</button>
         </div>
 
         <!-- Phase 4: ID Matching & University Submission -->
@@ -772,6 +821,12 @@
         <div id="error-container"></div>
     </div>
 
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="spinner"></div>
+        <div class="loading-text">Updating Results...</div>
+    </div>
+
     <script>
         // Constants - All thresholds and mappings defined here for maintainability
         const GRADE_CONSTANTS = {
@@ -798,6 +853,16 @@
         // Global variables
         let gradingData = [];
         let currentP1 = GRADE_CONSTANTS.DEFAULT_P1;
+
+        // Pagination State
+        const MAX_VISIBLE_CELLS = 400;
+        let paginationState = {
+            enabled: false,
+            rowsPerPage: 0,
+            currentPage: 1,
+            totalPages: 1
+        };
+        let currentHeaders = []; // Store headers globally to avoid scraping DOM
         let currentP4 = GRADE_CONSTANTS.DEFAULT_P4;
 
         // Phase 3 - Chart instances
@@ -826,12 +891,17 @@
         document.getElementById('grading-file').addEventListener('change', handleFileUpload);
 
         // Phase 2 - Slider event listeners
-        document.getElementById('p1-slider').addEventListener('input', handleSliderChange);
-        document.getElementById('p4-slider').addEventListener('input', handleSliderChange);
+        // "input" event fires continuously while dragging -> Update UI only (fast)
+        document.getElementById('p1-slider').addEventListener('input', handleSliderInput);
+        document.getElementById('p4-slider').addEventListener('input', handleSliderInput);
+
+        // "change" event fires only when slider is released -> Perform heavy calculations
+        document.getElementById('p1-slider').addEventListener('change', handleSliderCommit);
+        document.getElementById('p4-slider').addEventListener('change', handleSliderCommit);
 
         // Phase 5 - Number input event listeners
-        document.getElementById('p1-input').addEventListener('input', handleInputChange);
-        document.getElementById('p4-input').addEventListener('input', handleInputChange);
+        document.getElementById('p1-input').addEventListener('change', handleInputChange);
+        document.getElementById('p4-input').addEventListener('change', handleInputChange);
 
         // Phase 4 - ID matching event listener
         document.getElementById('process-and-copy-btn').addEventListener('click', handleProcessAndCopy);
@@ -896,7 +966,7 @@
 
         function processGradingData(rawData) {
             try {
-                const headers = rawData[0];
+                let headers = rawData[0];
 
                 // Validate that first column is mtknr
                 if (!headers[0] || headers[0].toLowerCase() !== 'mtknr') {
@@ -904,21 +974,50 @@
                     return;
                 }
 
+                // Phase 11 - Smart Column Filtering
+                // Identify which columns have data
+                const columnsWithData = new Set([0]); // Always keep index 0 (mtknr)
+
+                // Check all data rows (skipping header)
+                for (let i = 1; i < rawData.length; i++) {
+                    const row = rawData[i];
+                    if (!row || row.length === 0) continue;
+
+                    for (let j = 1; j < headers.length; j++) {
+                        const cellValue = row[j];
+                        // Consider a column "active" if it has any non-empty value
+                        if (cellValue !== undefined && cellValue !== null && cellValue.toString().trim() !== '') {
+                            columnsWithData.add(j);
+                        }
+                    }
+                }
+
+                // Filter headers based on active columns
+                const filteredHeaders = headers.filter((_, index) => columnsWithData.has(index));
+
                 // Process data rows
                 gradingData = [];
                 for (let i = 1; i < rawData.length; i++) {
                     const row = rawData[i];
                     if (!row || row.length === 0) continue; // Skip empty rows
 
+                    // Create filtered row preserving only active columns
+                    const filteredRow = row.filter((_, index) => columnsWithData.has(index));
+
                     const studentData = {
                         mtknr: row[0],
                         taskScores: [],
-                        originalRow: row
+                        originalRow: filteredRow // Use filtered row for display
                     };
 
-                    // Extract numeric task scores (columns 1 onwards)
-                    for (let j = 1; j < headers.length; j++) {
-                        const score = parseFloat(row[j]);
+                    // Extract numeric task scores (columns 1 onwards from ORIGINAL data)
+                    // We must still process all score columns for calculation, even if hidden? 
+                    // Requirement: "show only columns on where you see data" -> implies hidden columns usually means no data.
+                    // But if a column has ANY data, we show it. If it has NO data, it contributes 0 to sum anyway.
+                    // So we can extract scores from the filtered row (skipping index 0).
+
+                    for (let j = 1; j < filteredRow.length; j++) {
+                        const score = parseFloat(filteredRow[j]);
                         if (!isNaN(score)) {
                             studentData.taskScores.push(score);
                         }
@@ -934,9 +1033,40 @@
                     return;
                 }
 
-                // Calculate grades and display table
+                // Calculate grades
                 calculateGrades();
-                displayGradingTable(headers);
+
+                // Setup Pagination (Fixed 10 rows per page)
+                // const numCols = filteredHeaders.length + 3; 
+                // Prior logic: const rowsPerPage = Math.max(1, Math.floor(MAX_VISIBLE_CELLS / numCols));
+                const rowsPerPage = 10; // User request: "let's say 10 rows"
+
+                // If total rows > 10, enable pagination
+                if (gradingData.length > rowsPerPage) {
+                    paginationState = {
+                        enabled: true,
+                        rowsPerPage: rowsPerPage,
+                        currentPage: 1,
+                        totalPages: Math.ceil(gradingData.length / rowsPerPage)
+                    };
+                    console.log(`Pagination enabled: ${rowsPerPage} rows per page.`);
+                } else {
+                    paginationState = {
+                        enabled: false, // Or true? User said "rest is paginated". 
+                        // If <= 10 rows, we technically don't need pagination but the UI expectation 
+                        // might be consistent. Let's disable controls if single page.
+                        rowsPerPage: gradingData.length,
+                        currentPage: 1,
+                        totalPages: 1
+                    };
+                    console.log('Pagination disabled (small dataset).');
+                }
+
+                // Save current headers globally for pagination re-renders
+                currentHeaders = filteredHeaders;
+
+                // Display table (first page)
+                displayGradingTable(filteredHeaders);
 
                 // Phase 2: Set dynamic slider ranges based on data
                 setSliderRanges();
@@ -977,37 +1107,66 @@
             });
         }
 
-        // Phase 2 - F5: Slider change handler
-        function handleSliderChange(event) {
+        // Phase 2 - Slider INPUT handler (Visual Only - Fast)
+        function handleSliderInput(event) {
+            const sliderId = event.target.id;
+            const value = parseFloat(event.target.value);
+
+            // Only update the number input display, NO heavy calculations
+            if (sliderId === 'p1-slider') {
+                document.getElementById('p1-input').value = value;
+            } else if (sliderId === 'p4-slider') {
+                document.getElementById('p4-input').value = value;
+            }
+        }
+
+        // Phase 2 - Slider COMMIT handler (Heavy Calculation - On Release)
+        function handleSliderCommit(event) {
             const sliderId = event.target.id;
             const value = parseFloat(event.target.value);
 
             if (sliderId === 'p1-slider') {
                 currentP1 = value;
-                document.getElementById('p1-input').value = value;
             } else if (sliderId === 'p4-slider') {
                 currentP4 = value;
-                document.getElementById('p4-input').value = value;
             }
 
-            // Show warning if P1 <= P4 but don't prevent it
             checkThresholdValidity();
 
-            // Recalculate grades if data is loaded
             if (gradingData.length > 0) {
-                calculateGrades();
-                updateSummaryStats();
+                // Show loading spinner and defer calculation to allow UI paint
+                showLoading();
 
-                // Optimized updates
-                requestAnimationFrame(() => {
-                    updateCharts(); // Fast chart update
-                });
+                setTimeout(() => {
+                    console.time('Total Update');
 
-                debouncedUpdateTable(); // Debounced table update
+                    console.time('Calculation');
+                    calculateGrades();
+                    updateSummaryStats();
+                    console.timeEnd('Calculation');
+
+                    console.time('Chart Render');
+                    updateCharts();
+                    console.timeEnd('Chart Render');
+
+                    console.time('Table Render');
+                    updateGradingTable();
+                    console.timeEnd('Table Render');
+
+                    console.timeEnd('Total Update');
+
+                    hideLoading();
+                }, 10);
             }
         }
 
-        // Phase 2 - F8: Calculate and display summary statistics
+        function showLoading() {
+            document.getElementById('loading-overlay').style.display = 'flex';
+        }
+
+        function hideLoading() {
+            document.getElementById('loading-overlay').style.display = 'none';
+        }  // Phase 2 - F8: Calculate and display summary statistics
         function updateSummaryStats() {
             if (gradingData.length === 0) return;
 
@@ -1024,29 +1183,44 @@
             document.getElementById('pass-rate').textContent = passRate.toFixed(1) + '%';
         }
 
-        // Update only the table data (keep headers)
+        // Update table data (Smart DOM Reuse with Pagination)
         function updateGradingTable() {
             const tableBody = document.querySelector('#grading-table-content tbody');
             if (!tableBody) return;
 
-            let tableHTML = '';
-            gradingData.forEach(student => {
-                tableHTML += '<tr>';
+            const rows = tableBody.rows;
 
-                // Original data columns
-                student.originalRow.forEach(value => {
-                    tableHTML += `<td>${value !== undefined ? value : ''}</td>`;
-                });
+            // Determine the subset of data currently being displayed
+            let startIndex = 0;
+            let displayDataCount = gradingData.length;
 
-                // Computed columns
-                tableHTML += `<td class="computed-column">${student.pkt.toFixed(1)}</td>`;
-                tableHTML += `<td class="computed-column">${student.raw_note.toFixed(2)}</td>`;
-                tableHTML += `<td class="computed-column">${student.grade.toFixed(1)}</td>`;
+            if (paginationState.enabled) {
+                startIndex = (paginationState.currentPage - 1) * paginationState.rowsPerPage;
+                const endIndex = Math.min(startIndex + paginationState.rowsPerPage, gradingData.length);
+                displayDataCount = endIndex - startIndex;
+            }
 
-                tableHTML += '</tr>';
-            });
+            // Check if we can reuse existing rows (must match visible count)
+            const canReuseDOM = rows.length === displayDataCount;
 
-            tableBody.innerHTML = tableHTML;
+            if (canReuseDOM) {
+                // Optimization: Update visible rows only
+                for (let i = 0; i < displayDataCount; i++) {
+                    const student = gradingData[startIndex + i]; // Offset by start index
+                    const row = rows[i];
+                    const cells = row.cells;
+
+                    const computedStartIndex = cells.length - 3;
+
+                    if (computedStartIndex >= 0) {
+                        cells[computedStartIndex].textContent = student.pkt.toFixed(1);
+                        cells[computedStartIndex + 1].textContent = student.raw_note.toFixed(2);
+                        cells[computedStartIndex + 2].textContent = student.grade.toFixed(1);
+                    }
+                }
+            } else {
+                console.warn('DOM mismatch in updateGradingTable, probably page change. Skipping update.');
+            }
 
             // Phase 10 - Update sort indicators in headers
             updateSortIndicators();
@@ -1334,6 +1508,17 @@
         function displayGradingTable(originalHeaders) {
             const container = document.getElementById('grading-table-content');
 
+            // Determine slice
+            let displayData = [];
+
+            if (paginationState.enabled) {
+                const startIndex = (paginationState.currentPage - 1) * paginationState.rowsPerPage;
+                const endIndex = Math.min(startIndex + paginationState.rowsPerPage, gradingData.length);
+                displayData = gradingData.slice(startIndex, endIndex);
+            } else {
+                displayData = gradingData;
+            }
+
             // Create enhanced headers
             const enhancedHeaders = [...originalHeaders, 'pkt', 'raw_note', 'grade'];
 
@@ -1351,7 +1536,7 @@
 
             // Data rows
             tableHTML += '<tbody>';
-            gradingData.forEach(student => {
+            displayData.forEach(student => {
                 tableHTML += '<tr>';
 
                 // Original data columns
@@ -1370,10 +1555,32 @@
 
             container.innerHTML = tableHTML;
             document.getElementById('grading-table-container').style.display = 'block';
+            updatePaginationControls();
+        }
+
+        function changePage(delta) {
+            const newPage = paginationState.currentPage + delta;
+            if (newPage >= 1 && newPage <= paginationState.totalPages) {
+                paginationState.currentPage = newPage;
+                displayGradingTable(currentHeaders);
+            }
+        }
+
+        function updatePaginationControls() {
+            const container = document.getElementById('pagination-controls');
+            if (paginationState.enabled) {
+                container.style.display = 'flex';
+                document.getElementById('pagination-info').textContent = `Page ${paginationState.currentPage} / ${paginationState.totalPages}`;
+                document.getElementById('prev-page-btn').disabled = paginationState.currentPage === 1;
+                document.getElementById('next-page-btn').disabled = paginationState.currentPage === paginationState.totalPages;
+            } else {
+                container.style.display = 'none';
+            }
         }
 
         // Phase 10 - Table sorting functions
         function getSortIndicator(columnIndex) {
+            // ... existing ... (not changing this here, just context)
             if (sortState.column !== columnIndex) {
                 return '<span class="sort-indicator">⇅</span>';
             }
@@ -1448,8 +1655,8 @@
                 return student;
             });
 
-            // Re-render the table
-            updateGradingTable();
+            // Re-render the current page
+            displayGradingTable(currentHeaders);
         }
 
         // Phase 2 - Set dynamic slider ranges based on data
@@ -1465,13 +1672,13 @@
             const sliderMin = Math.max(0, Math.floor(minPoints));
             const sliderMax = Math.ceil(maxPoints) + 2; // Add small buffer
 
-            // Update P1 slider and input
+            // Update P1 slider (Inputs are now unbounded)
             const p1Slider = document.getElementById('p1-slider');
             const p1Input = document.getElementById('p1-input');
             p1Slider.min = sliderMin;
             p1Slider.max = sliderMax;
-            p1Input.min = sliderMin;
-            p1Input.max = sliderMax;
+            // p1Input.min = sliderMin; // Allow manual override
+            // p1Input.max = sliderMax; // Allow manual override
 
             // Set reasonable default for P1 (around 75% of max points)
             const p1Default = Math.ceil(maxPoints * 0.75);
@@ -1480,13 +1687,13 @@
             currentP1 = p1Default;
             document.getElementById('p1-range-info').textContent = 'Range: ' + sliderMin + '-' + sliderMax + ' points';
 
-            // Update P4 slider and input (same range as P1)
+            // Update P4 slider (Inputs are now unbounded)
             const p4Slider = document.getElementById('p4-slider');
             const p4Input = document.getElementById('p4-input');
             p4Slider.min = sliderMin;
             p4Slider.max = sliderMax;
-            p4Input.min = sliderMin;
-            p4Input.max = sliderMax;
+            // p4Input.min = sliderMin; // Allow manual override
+            // p4Input.max = sliderMax; // Allow manual override
 
             // Set reasonable default for P4 (around 40% of max points)
             const p4Default = Math.ceil(maxPoints * 0.4);
@@ -1763,25 +1970,6 @@
             document.getElementById('error-container').innerHTML = '';
         }
 
-        // Performance Optimization: Debounce function
-        function debounce(func, wait) {
-            let timeout;
-            return function executedFunction(...args) {
-                const later = () => {
-                    clearTimeout(timeout);
-                    func(...args);
-                };
-                clearTimeout(timeout);
-                timeout = setTimeout(later, wait);
-            };
-        }
-
-        // Performance Optimization: Debounced table update
-        // We delay the heavy DOM manipulation of the table so it doesn't block slider interaction
-        const debouncedUpdateTable = debounce(() => {
-            updateGradingTable();
-        }, 150); // 150ms delay
-
         // Phase 5 - Number input change handler
         function handleInputChange(event) {
             const inputId = event.target.id;
@@ -1792,23 +1980,11 @@
 
             if (inputId === 'p1-input') {
                 const p1Slider = document.getElementById('p1-slider');
-
-                // Ensure value is within slider bounds
-                const clampedValue = Math.max(parseFloat(p1Slider.min), Math.min(parseFloat(p1Slider.max), value));
-
-                currentP1 = clampedValue;
-                p1Slider.value = currentP1;
-                event.target.value = currentP1;
-
+                currentP1 = value;
+                document.getElementById('p1-slider').value = value;
             } else if (inputId === 'p4-input') {
-                const p4Slider = document.getElementById('p4-slider');
-
-                // Ensure value is within slider bounds
-                const clampedValue = Math.max(parseFloat(p4Slider.min), Math.min(parseFloat(p4Slider.max), value));
-
-                currentP4 = clampedValue;
-                p4Slider.value = currentP4;
-                event.target.value = currentP4;
+                currentP4 = value;
+                document.getElementById('p4-slider').value = value;
             }
 
             // Show warning if P1 <= P4 but don't prevent it
@@ -1816,15 +1992,19 @@
 
             // Recalculate grades if data is loaded
             if (gradingData.length > 0) {
-                calculateGrades();
-                updateSummaryStats();
+                // Reuse the same loading pattern for consistency
+                showLoading();
 
-                // Optimize updates
-                requestAnimationFrame(() => {
-                    updateCharts(); // Fast chart update
-                });
+                setTimeout(() => {
+                    console.time('Manual Input Update');
+                    calculateGrades();
+                    updateSummaryStats();
+                    updateCharts();
+                    updateGradingTable();
+                    console.timeEnd('Manual Input Update');
 
-                debouncedUpdateTable(); // Debounced table update
+                    hideLoading();
+                }, 10);
             }
         }
     </script>
