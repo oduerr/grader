@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -290,7 +291,8 @@
             margin-top: 10px;
         }
 
-        th, td {
+        th,
+        td {
             text-align: left;
             padding: 12px;
             border-bottom: 1px solid var(--border-color);
@@ -362,31 +364,32 @@
             .container {
                 padding: 10px;
             }
-            
+
             .sliders-container {
                 grid-template-columns: 1fr;
                 gap: 15px;
             }
-            
+
             .summary-stats {
                 grid-template-columns: 1fr;
                 gap: 15px;
             }
-            
+
             .charts-grid {
                 grid-template-columns: 1fr;
                 gap: 20px;
             }
-            
+
             .chart-wrapper {
                 height: 300px;
             }
-            
+
             table {
                 font-size: 14px;
             }
-            
-            th, td {
+
+            th,
+            td {
                 padding: 8px;
             }
         }
@@ -492,13 +495,11 @@
 
         .not-found-row {
             opacity: 0.5;
-            background: repeating-linear-gradient(
-                45deg,
-                transparent,
-                transparent 2px,
-                rgba(0, 0, 0, 0.05) 2px,
-                rgba(0, 0, 0, 0.05) 4px
-            );
+            background: repeating-linear-gradient(45deg,
+                    transparent,
+                    transparent 2px,
+                    rgba(0, 0, 0, 0.05) 2px,
+                    rgba(0, 0, 0, 0.05) 4px);
         }
 
         .not-found-row td {
@@ -512,7 +513,7 @@
                 flex-direction: column;
                 gap: 10px;
             }
-            
+
             .action-btn {
                 width: 100%;
             }
@@ -591,15 +592,15 @@
                 grid-template-columns: repeat(2, 1fr);
                 gap: 10px;
             }
-            
+
             .stat-item {
                 padding: 10px;
             }
-            
+
             .stat-value {
                 font-size: 1.2rem;
             }
-            
+
             /* Phase 7 - Responsive button layout */
             .action-btn {
                 flex: 1;
@@ -608,6 +609,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <div class="header-container">
@@ -622,13 +624,13 @@
             </div>
             </a>
         </div>
-        
+
         <div class="control-bar">
             <div class="file-input-container">
                 <label for="grading-file">Upload Grading File (.xlsx or .txt/.tsv)</label>
                 <input type="file" id="grading-file" accept=".xlsx,.txt,.tsv" />
             </div>
-            
+
             <!-- Phase 2: Interactive sliders -->
             <div class="sliders-container" id="sliders-container" style="display: none;">
                 <div class="slider-group">
@@ -643,7 +645,8 @@
                     <label for="p1-slider">P1 Threshold (Points for Grade 1.0)</label>
                     <div class="slider-wrapper">
                         <input type="range" id="p1-slider" min="10" max="100" value="20" step="0.5">
-                        <input type="number" id="p1-input" class="slider-input" min="10" max="100" value="20" step="0.5">
+                        <input type="number" id="p1-input" class="slider-input" min="10" max="100" value="20"
+                            step="0.5">
                     </div>
                     <small id="p1-range-info" style="color: #666; font-size: 0.8em;"></small>
                 </div>
@@ -696,7 +699,7 @@
                 <label for="student-ids">Paste Student IDs (one per line, in order from university Excel)</label>
                 <textarea id="student-ids" placeholder="12345&#10;67890&#10;13579&#10;..."></textarea>
                 <small style="color: #666; font-size: 0.9em;">
-                    Copy the student ID column from your official university Excel file and paste it here. 
+                    Copy the student ID column from your official university Excel file and paste it here.
                     The grades will be reordered to match this sequence and copied to clipboard.
                 </small>
             </div>
@@ -709,7 +712,7 @@
         <div id="id-match-container" class="id-match-container" style="display: none;">
             <h2>Grade Alignment (University Excel Order)</h2>
             <div id="id-match-content"></div>
-            
+
             <!-- Phase 5: Grade Alignment Statistics -->
             <div id="id-match-stats" class="id-match-stats" style="display: none; margin-top: 20px;">
                 <h3>Alignment Statistics</h3>
@@ -731,28 +734,34 @@
                         <div class="stat-label">Checksum</div>
                     </div>
                 </div>
-                
+
                 <div class="excel-formula-section" style="margin-top: 15px;">
-                    <label for="excel-formula" style="display: block; margin-bottom: 5px; font-weight: 500; color: var(--accent-color);">
+                    <label for="excel-formula"
+                        style="display: block; margin-bottom: 5px; font-weight: 500; color: var(--accent-color);">
                         Excel Checksum Formula (copy & paste):
                     </label>
                     <div style="display: flex; gap: 10px; align-items: center;">
-                        <input type="text" id="excel-formula" readonly class="excel-formula-input" value="=AVERAGE(F6:F20 * G6:G20)">
-                        <button id="copy-formula-btn" class="action-btn" style="padding: 5px 10px; font-size: 0.9rem;">Copy Formula</button>
+                        <input type="text" id="excel-formula" readonly class="excel-formula-input"
+                            value="=AVERAGE(F6:F20 * G6:G20)">
+                        <button id="copy-formula-btn" class="action-btn"
+                            style="padding: 5px 10px; font-size: 0.9rem;">Copy Formula</button>
                     </div>
                     <small style="color: #666; font-size: 0.85em; margin-top: 5px; display: block;">
                         Adjust cell ranges (F6:F20, G6:G20) to match your Excel data. F=Student IDs, G=Grades.
                     </small>
                 </div>
             </div>
-            
+
             <div style="margin-top: 15px; margin-bottom: 15px;">
                 <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
-                    <button id="copy-aligned-grades-btn" class="action-btn" style="display: none;">Copy Grades to Clipboard</button>
-                    <button id="copy-all-data-btn" class="action-btn copy-all-btn" style="display: none;" title="Copy both Student IDs and Grades for archival">Copy All to Clipboard</button>
+                    <button id="copy-aligned-grades-btn" class="action-btn" style="display: none;">Copy Grades to
+                        Clipboard</button>
+                    <button id="copy-all-data-btn" class="action-btn copy-all-btn" style="display: none;"
+                        title="Copy both Student IDs and Grades for archival">Copy All to Clipboard</button>
                 </div>
                 <small style="color: #666; font-size: 0.85em; margin-top: 5px; display: block;">
-                    "Copy All" includes both Student IDs and Grades in tab-separated format for easy pasting into Excel or saving as reference.
+                    "Copy All" includes both Student IDs and Grades in tab-separated format for easy pasting into Excel
+                    or saving as reference.
                 </small>
             </div>
             <div style="margin-top: 15px; color: #666; font-size: 0.9em;">
@@ -769,7 +778,7 @@
             // Default thresholds (will be configurable in later phases)
             DEFAULT_P1: 20,  // Points for grade 1.0
             DEFAULT_P4: 10,  // Points for grade 4.0
-            
+
             // Grade mapping intervals (based on F4 specification)
             GRADE_MAPPING: [
                 { max: 1.15, grade: 100 },
@@ -790,15 +799,15 @@
         let gradingData = [];
         let currentP1 = GRADE_CONSTANTS.DEFAULT_P1;
         let currentP4 = GRADE_CONSTANTS.DEFAULT_P4;
-        
+
         // Phase 3 - Chart instances
         let pointsHistogramChart = null;
         let histogramChart = null;
-        
+
         // Phase 4 - ID matching
         let studentIdList = [];
         let alignedGradeData = [];
-        
+
         // Phase 10 - Table sorting
         let sortState = {
             column: -1,
@@ -806,7 +815,7 @@
         };
 
         // Initialize slider values on page load
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             document.getElementById('p1-slider').value = currentP1;
             document.getElementById('p1-input').value = currentP1;
             document.getElementById('p4-slider').value = currentP4;
@@ -819,7 +828,7 @@
         // Phase 2 - Slider event listeners
         document.getElementById('p1-slider').addEventListener('input', handleSliderChange);
         document.getElementById('p4-slider').addEventListener('input', handleSliderChange);
-        
+
         // Phase 5 - Number input event listeners
         document.getElementById('p1-input').addEventListener('input', handleInputChange);
         document.getElementById('p4-input').addEventListener('input', handleInputChange);
@@ -827,10 +836,10 @@
         // Phase 4 - ID matching event listener
         document.getElementById('process-and-copy-btn').addEventListener('click', handleProcessAndCopy);
         document.getElementById('copy-aligned-grades-btn').addEventListener('click', handleCopyAlignedGrades);
-        
+
         // Phase 7 - Copy all data event listener
         document.getElementById('copy-all-data-btn').addEventListener('click', handleCopyAllData);
-        
+
         // Phase 5 - Copy formula event listener
         document.getElementById('copy-formula-btn').addEventListener('click', handleCopyFormula);
 
@@ -850,10 +859,10 @@
             }
 
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = function (e) {
                 try {
                     let jsonData;
-                    
+
                     if (isExcel) {
                         // Handle Excel files
                         const workbook = XLSX.read(e.target.result, { type: 'binary' });
@@ -866,7 +875,7 @@
                         const lines = text.split('\n').filter(line => line.trim().length > 0);
                         jsonData = lines.map(line => line.split('\t'));
                     }
-                    
+
                     if (jsonData.length < 2) {
                         showError('File must contain at least a header row and one data row');
                         return;
@@ -877,7 +886,7 @@
                     showError('Error reading file: ' + error.message);
                 }
             };
-            
+
             if (isExcel) {
                 reader.readAsBinaryString(file);
             } else {
@@ -888,7 +897,7 @@
         function processGradingData(rawData) {
             try {
                 const headers = rawData[0];
-                
+
                 // Validate that first column is mtknr
                 if (!headers[0] || headers[0].toLowerCase() !== 'mtknr') {
                     showError('First column must be "mtknr" (student ID)');
@@ -900,7 +909,7 @@
                 for (let i = 1; i < rawData.length; i++) {
                     const row = rawData[i];
                     if (!row || row.length === 0) continue; // Skip empty rows
-                    
+
                     const studentData = {
                         mtknr: row[0],
                         taskScores: [],
@@ -928,17 +937,17 @@
                 // Calculate grades and display table
                 calculateGrades();
                 displayGradingTable(headers);
-                
+
                 // Phase 2: Set dynamic slider ranges based on data
                 setSliderRanges();
-                
+
                 // Check if the default thresholds are valid
                 checkThresholdValidity();
-                
+
                 // Recalculate with new default thresholds and update display
                 calculateGrades();
                 updateGradingTable();
-                
+
                 // Show sliders and summary after data is loaded
                 document.getElementById('sliders-container').style.display = 'grid';
                 document.getElementById('summary-container').style.display = 'block';
@@ -946,7 +955,7 @@
                 document.getElementById('id-matching-container').style.display = 'block'; // Phase 4: Show ID matching
                 updateSummaryStats();
                 updateCharts(); // Phase 3: Create initial charts
-                
+
                 showInfo('Successfully loaded ' + gradingData.length + ' students from the Excel file');
 
             } catch (error) {
@@ -959,10 +968,10 @@
             gradingData.forEach(student => {
                 // F2 - Point aggregation
                 student.pkt = student.taskScores.reduce((sum, score) => sum + score, 0);
-                
+
                 // F3 - Linear interpolation (raw note 1.0 - 6.0)
                 student.raw_note = calculateRawNote(student.pkt, currentP1, currentP4);
-                
+
                 // F4 - Discrete grade mapping
                 student.grade = mapToDiscreteGrade(student.raw_note);
             });
@@ -972,7 +981,7 @@
         function handleSliderChange(event) {
             const sliderId = event.target.id;
             const value = parseFloat(event.target.value);
-            
+
             if (sliderId === 'p1-slider') {
                 currentP1 = value;
                 document.getElementById('p1-input').value = value;
@@ -980,31 +989,36 @@
                 currentP4 = value;
                 document.getElementById('p4-input').value = value;
             }
-            
+
             // Show warning if P1 <= P4 but don't prevent it
             checkThresholdValidity();
-            
+
             // Recalculate grades if data is loaded
             if (gradingData.length > 0) {
                 calculateGrades();
-                updateGradingTable();
                 updateSummaryStats();
-                updateCharts(); // Phase 3: Update charts
+
+                // Optimized updates
+                requestAnimationFrame(() => {
+                    updateCharts(); // Fast chart update
+                });
+
+                debouncedUpdateTable(); // Debounced table update
             }
         }
 
         // Phase 2 - F8: Calculate and display summary statistics
         function updateSummaryStats() {
             if (gradingData.length === 0) return;
-            
+
             // Calculate average grade
             const totalGrades = gradingData.reduce((sum, student) => sum + student.grade, 0);
             const averageGrade = totalGrades / gradingData.length;
-            
+
             // Calculate pass rate (grade <= 4.15)
             const passCount = gradingData.filter(student => student.grade <= 4.15).length;
             const passRate = (passCount / gradingData.length) * 100;
-            
+
             // Update display
             document.getElementById('average-grade').textContent = averageGrade.toFixed(2);
             document.getElementById('pass-rate').textContent = passRate.toFixed(1) + '%';
@@ -1014,26 +1028,26 @@
         function updateGradingTable() {
             const tableBody = document.querySelector('#grading-table-content tbody');
             if (!tableBody) return;
-            
+
             let tableHTML = '';
             gradingData.forEach(student => {
                 tableHTML += '<tr>';
-                
+
                 // Original data columns
                 student.originalRow.forEach(value => {
                     tableHTML += `<td>${value !== undefined ? value : ''}</td>`;
                 });
-                
+
                 // Computed columns
                 tableHTML += `<td class="computed-column">${student.pkt.toFixed(1)}</td>`;
                 tableHTML += `<td class="computed-column">${student.raw_note.toFixed(2)}</td>`;
                 tableHTML += `<td class="computed-column">${student.grade.toFixed(1)}</td>`;
-                
+
                 tableHTML += '</tr>';
             });
-            
+
             tableBody.innerHTML = tableHTML;
-            
+
             // Phase 10 - Update sort indicators in headers
             updateSortIndicators();
         }
@@ -1055,146 +1069,160 @@
         // Phase 9 - Points histogram with P1/P4 thresholds
         function createPointsHistogramChart() {
             if (gradingData.length === 0) return;
-            
+
             // Get all points and count frequencies
             const points = gradingData.map(student => student.pkt);
             const pointsFrequency = {};
-            
+
             // Count frequency of each point value (rounded to nearest 0.5)
             points.forEach(point => {
                 const roundedPoint = Math.round(point * 2) / 2;
                 pointsFrequency[roundedPoint] = (pointsFrequency[roundedPoint] || 0) + 1;
             });
-            
+
             // Create sorted array of point values and their counts
             const sortedPoints = Object.keys(pointsFrequency).map(p => parseFloat(p)).sort((a, b) => a - b);
             const labels = sortedPoints.map(p => p.toString());
             const counts = sortedPoints.map(p => pointsFrequency[p]);
-            
+
             const ctx = document.getElementById('points-histogram-chart').getContext('2d');
-            
-            // Destroy existing chart if it exists
-            if (pointsHistogramChart) {
-                pointsHistogramChart.destroy();
-            }
-            
+
             const maxCount = Math.max(...counts);
             const minPoint = Math.min(...sortedPoints);
             const maxPoint = Math.max(...sortedPoints);
-            
-            pointsHistogramChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Number of Students',
-                        data: counts,
-                        backgroundColor: labels.map(label => {
-                            const pointValue = parseFloat(label);
-                            // Calculate what grade this point value would result in
-                            const rawNote = calculateRawNote(pointValue, currentP1, currentP4);
-                            const finalGrade = mapToDiscreteGrade(rawNote);
-                            // Use same logic as grade histogram: grade <= 4.15 for passing
-                            if (finalGrade <= 4.15) return 'rgba(40, 167, 69, 0.8)'; // Green for passing
-                            else return 'rgba(220, 53, 69, 0.8)'; // Red for failing
-                        }),
-                        borderColor: labels.map(label => {
-                            const pointValue = parseFloat(label);
-                            // Calculate what grade this point value would result in
-                            const rawNote = calculateRawNote(pointValue, currentP1, currentP4);
-                            const finalGrade = mapToDiscreteGrade(rawNote);
-                            // Use same logic as grade histogram: grade <= 4.15 for passing
-                            if (finalGrade <= 4.15) return '#28a745'; // Green for passing
-                            else return '#dc3545'; // Red for failing
-                        }),
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        title: {
-                            display: true,
-                            text: 'Distribution of Student Points with Grade Thresholds'
-                        },
-                        legend: {
-                            position: 'bottom'
-                        }
+
+            const backgroundColors = labels.map(label => {
+                const pointValue = parseFloat(label);
+                const rawNote = calculateRawNote(pointValue, currentP1, currentP4);
+                const finalGrade = mapToDiscreteGrade(rawNote);
+                return finalGrade <= 4.15 ? 'rgba(40, 167, 69, 0.8)' : 'rgba(220, 53, 69, 0.8)';
+            });
+
+            const borderColors = labels.map(label => {
+                const pointValue = parseFloat(label);
+                const rawNote = calculateRawNote(pointValue, currentP1, currentP4);
+                const finalGrade = mapToDiscreteGrade(rawNote);
+                return finalGrade <= 4.15 ? '#28a745' : '#dc3545';
+            });
+
+            if (pointsHistogramChart) {
+                // Update existing chart
+                pointsHistogramChart.data.labels = labels;
+                pointsHistogramChart.data.datasets[0].data = counts;
+                pointsHistogramChart.data.datasets[0].backgroundColor = backgroundColors;
+                pointsHistogramChart.data.datasets[0].borderColor = borderColors;
+
+                // Update threshold lines
+                // P1 line (index 1)
+                pointsHistogramChart.data.datasets[1].label = `P1 Threshold: ${currentP1} pts (Grade 1.0)`;
+                pointsHistogramChart.data.datasets[1].data = [{ x: currentP1, y: 0 }, { x: currentP1, y: Math.ceil(maxCount * 1.1) }];
+
+                // P4 line (index 2)
+                pointsHistogramChart.data.datasets[2].label = `P4 Threshold: ${currentP4} pts (Grade 4.0)`;
+                pointsHistogramChart.data.datasets[2].data = [{ x: currentP4, y: 0 }, { x: currentP4, y: Math.ceil(maxCount * 1.1) }];
+
+                pointsHistogramChart.options.scales.x.min = Math.max(0, minPoint - 1);
+                pointsHistogramChart.options.scales.x.max = maxPoint + 1;
+                pointsHistogramChart.options.scales.y.max = Math.ceil(maxCount * 1.2);
+
+                pointsHistogramChart.update('none'); // Update without animation for performance
+            } else {
+                // Create new chart
+                pointsHistogramChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Number of Students',
+                            data: counts,
+                            backgroundColor: backgroundColors,
+                            borderColor: borderColors,
+                            borderWidth: 1
+                        }, {
+                            // P1 Threshold Line
+                            label: `P1 Threshold: ${currentP1} pts (Grade 1.0)`,
+                            type: 'line',
+                            data: [{ x: currentP1, y: 0 }, { x: currentP1, y: Math.ceil(maxCount * 1.1) }],
+                            borderColor: '#28a745',
+                            backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                            borderWidth: 3,
+                            borderDash: [5, 5],
+                            pointRadius: 0,
+                            fill: false,
+                            tension: 0
+                        }, {
+                            // P4 Threshold Line
+                            label: `P4 Threshold: ${currentP4} pts (Grade 4.0)`,
+                            type: 'line',
+                            data: [{ x: currentP4, y: 0 }, { x: currentP4, y: Math.ceil(maxCount * 1.1) }],
+                            borderColor: '#dc3545',
+                            backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                            borderWidth: 3,
+                            borderDash: [5, 5],
+                            pointRadius: 0,
+                            fill: false,
+                            tension: 0
+                        }]
                     },
-                    scales: {
-                        x: {
-                            type: 'linear',
-                            position: 'bottom',
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        animation: {
+                            duration: 0 // Disable animation for better performance during updates
+                        },
+                        plugins: {
                             title: {
                                 display: true,
-                                text: 'Points (pkt)'
+                                text: 'Distribution of Student Points with Grade Thresholds'
                             },
-                            min: Math.max(0, minPoint - 1),
-                            max: maxPoint + 1,
-                            ticks: {
-                                stepSize: 1
+                            legend: {
+                                position: 'bottom'
                             }
                         },
-                        y: {
-                            title: {
-                                display: true,
-                                text: 'Number of Students'
+                        scales: {
+                            x: {
+                                type: 'linear',
+                                position: 'bottom',
+                                title: {
+                                    display: true,
+                                    text: 'Points (pkt)'
+                                },
+                                min: Math.max(0, minPoint - 1),
+                                max: maxPoint + 1,
+                                ticks: {
+                                    stepSize: 1
+                                }
                             },
-                            beginAtZero: true,
-                            ticks: {
-                                stepSize: 1
-                            },
-                            max: Math.ceil(maxCount * 1.2)
+                            y: {
+                                title: {
+                                    display: true,
+                                    text: 'Number of Students'
+                                },
+                                beginAtZero: true,
+                                ticks: {
+                                    stepSize: 1
+                                },
+                                max: Math.ceil(maxCount * 1.2)
+                            }
                         }
                     }
-                }
-            });
-            
-            // Add P1 threshold line as a separate dataset
-            pointsHistogramChart.data.datasets.push({
-                label: `P1 Threshold: ${currentP1} pts (Grade 1.0)`,
-                type: 'line',
-                data: [{x: currentP1, y: 0}, {x: currentP1, y: Math.ceil(maxCount * 1.1)}],
-                borderColor: '#28a745',
-                backgroundColor: 'rgba(40, 167, 69, 0.1)',
-                borderWidth: 3,
-                borderDash: [5, 5],
-                pointRadius: 0,
-                fill: false,
-                tension: 0
-            });
-            
-            // Add P4 threshold line as a separate dataset  
-            pointsHistogramChart.data.datasets.push({
-                label: `P4 Threshold: ${currentP4} pts (Grade 4.0)`,
-                type: 'line',
-                data: [{x: currentP4, y: 0}, {x: currentP4, y: Math.ceil(maxCount * 1.1)}],
-                borderColor: '#dc3545',
-                backgroundColor: 'rgba(220, 53, 69, 0.1)',
-                borderWidth: 3,
-                borderDash: [5, 5],
-                pointRadius: 0,
-                fill: false,
-                tension: 0
-            });
-            
-            pointsHistogramChart.update();
+                });
+            }
         }
 
         // Phase 3 - F7: Create histogram of grades
         function createHistogramChart() {
             if (gradingData.length === 0) return;
-            
+
             // Count frequency of each grade
             const gradeFrequency = {};
             const possibleGrades = [1.0, 1.3, 1.7, 2.0, 2.3, 2.7, 3.0, 3.3, 3.7, 4.0, 5.0];
-            
+
             // Initialize all grades with 0 count
             possibleGrades.forEach(grade => {
                 gradeFrequency[grade] = 0;
             });
-            
+
             // Count actual grades
             gradingData.forEach(student => {
                 const grade = student.grade;
@@ -1202,70 +1230,81 @@
                     gradeFrequency[grade]++;
                 }
             });
-            
+
             // Prepare data for chart
             const labels = possibleGrades.map(grade => grade.toFixed(1));
             const counts = possibleGrades.map(grade => gradeFrequency[grade]);
-            
+
             const ctx = document.getElementById('histogram-chart').getContext('2d');
-            
-            // Destroy existing chart if it exists
+
+            const backgroundColors = labels.map(grade => {
+                const gradeNum = parseFloat(grade);
+                return gradeNum <= 4.15 ? 'rgba(40, 167, 69, 0.8)' : 'rgba(220, 53, 69, 0.8)';
+            });
+
+            const borderColors = labels.map(grade => {
+                const gradeNum = parseFloat(grade);
+                return gradeNum <= 4.15 ? '#28a745' : '#dc3545';
+            });
+
             if (histogramChart) {
-                histogramChart.destroy();
-            }
-            
-            histogramChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Number of Students',
-                        data: counts,
-                        backgroundColor: labels.map(grade => {
-                            const gradeNum = parseFloat(grade);
-                            if (gradeNum <= 4.15) return 'rgba(40, 167, 69, 0.8)'; // Green for passing
-                            else return 'rgba(220, 53, 69, 0.8)'; // Red for failing
-                        }),
-                        borderColor: labels.map(grade => {
-                            const gradeNum = parseFloat(grade);
-                            if (gradeNum <= 4.15) return '#28a745'; // Green for passing
-                            else return '#dc3545'; // Red for failing
-                        }),
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        title: {
-                            display: true,
-                            text: 'Distribution of Final Grades'
-                        },
-                        legend: {
-                            position: 'bottom'
-                        }
+                // Update existing chart
+                histogramChart.data.labels = labels;
+                histogramChart.data.datasets[0].data = counts;
+                histogramChart.data.datasets[0].backgroundColor = backgroundColors;
+                histogramChart.data.datasets[0].borderColor = borderColors;
+
+                histogramChart.update('none'); // Update without animation
+            } else {
+                // Create new chart
+                histogramChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Number of Students',
+                            data: counts,
+                            backgroundColor: backgroundColors,
+                            borderColor: borderColors,
+                            borderWidth: 1
+                        }]
                     },
-                    scales: {
-                        x: {
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        animation: {
+                            duration: 0 // Disable animation for better performance
+                        },
+                        plugins: {
                             title: {
                                 display: true,
-                                text: 'Grade'
+                                text: 'Distribution of Final Grades'
+                            },
+                            legend: {
+                                position: 'bottom'
                             }
                         },
-                        y: {
-                            title: {
-                                display: true,
-                                text: 'Number of Students'
+                        scales: {
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Grade'
+                                }
                             },
-                            beginAtZero: true,
-                            ticks: {
-                                stepSize: 1
+                            y: {
+                                title: {
+                                    display: true,
+                                    text: 'Number of Students'
+                                },
+                                beginAtZero: true,
+                                ticks: {
+                                    stepSize: 1
+                                }
                             }
                         }
                     }
-                }
-            });
+                });
+            }
         }
 
         // Phase 3 - Update charts when data changes
@@ -1294,12 +1333,12 @@
 
         function displayGradingTable(originalHeaders) {
             const container = document.getElementById('grading-table-content');
-            
+
             // Create enhanced headers
             const enhancedHeaders = [...originalHeaders, 'pkt', 'raw_note', 'grade'];
-            
+
             let tableHTML = '<div class="scrollable-table"><table>';
-            
+
             // Header row
             tableHTML += '<thead><tr>';
             enhancedHeaders.forEach((header, index) => {
@@ -1309,26 +1348,26 @@
                 tableHTML += `<th class="${className}" onclick="sortGradingTable(${index})">${header}${sortIndicator}</th>`;
             });
             tableHTML += '</tr></thead>';
-            
+
             // Data rows
             tableHTML += '<tbody>';
             gradingData.forEach(student => {
                 tableHTML += '<tr>';
-                
+
                 // Original data columns
                 student.originalRow.forEach(value => {
                     tableHTML += `<td>${value !== undefined ? value : ''}</td>`;
                 });
-                
+
                 // Computed columns
                 tableHTML += `<td class="computed-column">${student.pkt.toFixed(1)}</td>`;
                 tableHTML += `<td class="computed-column">${student.raw_note.toFixed(2)}</td>`;
                 tableHTML += `<td class="computed-column">${student.grade.toFixed(1)}</td>`;
-                
+
                 tableHTML += '</tr>';
             });
             tableHTML += '</tbody></table></div>';
-            
+
             container.innerHTML = tableHTML;
             document.getElementById('grading-table-container').style.display = 'block';
         }
@@ -1338,8 +1377,8 @@
             if (sortState.column !== columnIndex) {
                 return '<span class="sort-indicator">⇅</span>';
             }
-            return sortState.ascending 
-                ? '<span class="sort-indicator">▲</span>' 
+            return sortState.ascending
+                ? '<span class="sort-indicator">▲</span>'
                 : '<span class="sort-indicator">▼</span>';
         }
 
@@ -1416,16 +1455,16 @@
         // Phase 2 - Set dynamic slider ranges based on data
         function setSliderRanges() {
             if (gradingData.length === 0) return;
-            
+
             // Calculate min and max points from the data
             const points = gradingData.map(student => student.pkt);
             const minPoints = Math.min(...points);
             const maxPoints = Math.max(...points);
-            
+
             // Both sliders go from minimum to maximum points (independent ranges)
             const sliderMin = Math.max(0, Math.floor(minPoints));
             const sliderMax = Math.ceil(maxPoints) + 2; // Add small buffer
-            
+
             // Update P1 slider and input
             const p1Slider = document.getElementById('p1-slider');
             const p1Input = document.getElementById('p1-input');
@@ -1433,14 +1472,14 @@
             p1Slider.max = sliderMax;
             p1Input.min = sliderMin;
             p1Input.max = sliderMax;
-            
+
             // Set reasonable default for P1 (around 75% of max points)
             const p1Default = Math.ceil(maxPoints * 0.75);
             p1Slider.value = p1Default;
             p1Input.value = p1Default;
             currentP1 = p1Default;
             document.getElementById('p1-range-info').textContent = 'Range: ' + sliderMin + '-' + sliderMax + ' points';
-            
+
             // Update P4 slider and input (same range as P1)
             const p4Slider = document.getElementById('p4-slider');
             const p4Input = document.getElementById('p4-input');
@@ -1448,14 +1487,14 @@
             p4Slider.max = sliderMax;
             p4Input.min = sliderMin;
             p4Input.max = sliderMax;
-            
+
             // Set reasonable default for P4 (around 40% of max points)
             const p4Default = Math.ceil(maxPoints * 0.4);
             p4Slider.value = p4Default;
             p4Input.value = p4Default;
             currentP4 = p4Default;
             document.getElementById('p4-range-info').textContent = 'Range: ' + sliderMin + '-' + sliderMax + ' points';
-            
+
             console.log('Data range: ' + minPoints + '-' + maxPoints + ' points');
             console.log('P1 range: ' + sliderMin + '-' + sliderMax + ', default: ' + p1Default);
             console.log('P4 range: ' + sliderMin + '-' + sliderMax + ', default: ' + p4Default);
@@ -1464,7 +1503,7 @@
         // Check if P1 > P4 and show warning if not
         function checkThresholdValidity() {
             const errorContainer = document.getElementById('error-container');
-            
+
             if (currentP1 <= currentP4) {
                 showError('Warning: P1 (' + currentP1 + ') should be greater than P4 (' + currentP4 + ') for valid linear interpolation. Results may be unexpected.');
             } else {
@@ -1483,27 +1522,27 @@
         async function handleProcessAndCopy() {
             const textarea = document.getElementById('student-ids');
             const idsText = textarea.value.trim();
-            
+
             if (!idsText) {
                 showError('Please paste student IDs in the textarea');
                 return;
             }
-            
+
             if (gradingData.length === 0) {
                 showError('Please upload grading data first');
                 return;
             }
-            
+
             // Parse the student IDs (one per line)
             studentIdList = idsText.split('\n')
                 .map(id => id.trim())
                 .filter(id => id.length > 0);
-            
+
             if (studentIdList.length === 0) {
                 showError('No valid student IDs found');
                 return;
             }
-            
+
             // Create aligned grade data
             alignedGradeData = [];
             studentIdList.forEach(mtknr => {
@@ -1522,32 +1561,32 @@
                     });
                 }
             });
-            
+
             // Display the aligned table
             displayIdMatchTable();
-            
+
             showInfo('Processed ' + studentIdList.length + ' student IDs (' + alignedGradeData.filter(d => d.found).length + ' matches found). Use the "Copy Grades" button below to copy to clipboard.');
         }
 
         // Phase 4 - Display the ID-aligned grade table
         function displayIdMatchTable() {
             const container = document.getElementById('id-match-content');
-            
+
             let tableHTML = '<div class="scrollable-table"><table>';
-            
+
             // Header row
             tableHTML += '<thead><tr>';
             tableHTML += '<th>Order</th>';
             tableHTML += '<th>Student ID (mtknr)</th>';
             tableHTML += '<th class="computed-column">Grade</th>';
             tableHTML += '</tr></thead>';
-            
+
             // Data rows
             tableHTML += '<tbody>';
             alignedGradeData.forEach((student, index) => {
                 const rowClass = student.found ? '' : 'not-found-row';
                 const gradeDisplay = student.found ? student.grade.toFixed(1) : 'not found';
-                
+
                 tableHTML += `<tr class="${rowClass}">`;
                 tableHTML += `<td>${index + 1}</td>`;
                 tableHTML += `<td>${student.mtknr}</td>`;
@@ -1555,12 +1594,12 @@
                 tableHTML += '</tr>';
             });
             tableHTML += '</tbody></table></div>';
-            
+
             container.innerHTML = tableHTML;
             document.getElementById('id-match-container').style.display = 'block';
             document.getElementById('copy-aligned-grades-btn').style.display = 'inline-block';
             document.getElementById('copy-all-data-btn').style.display = 'inline-block';
-            
+
             // Phase 5: Update alignment statistics
             updateAlignmentStats();
         }
@@ -1571,12 +1610,12 @@
                 showError('No aligned grade data available. Please process student IDs first.');
                 return;
             }
-            
+
             // Create grade column text (one grade per line)
             const gradeText = alignedGradeData.map(student => {
                 return student.found ? student.grade.toFixed(1) : '';
             }).join('\n');
-            
+
             try {
                 await navigator.clipboard.writeText(gradeText);
                 showInfo('Copied ' + alignedGradeData.length + ' grades to clipboard (empty lines for missing students)');
@@ -1602,16 +1641,16 @@
                 showError('No aligned grade data available. Please process student IDs first.');
                 return;
             }
-            
+
             // Create tab-separated data with header
             const header = 'Student_ID\tGrade';
             const dataRows = alignedGradeData.map(student => {
                 const grade = student.found ? student.grade.toFixed(1) : '';
                 return student.mtknr + '\t' + grade;
             });
-            
+
             const allData = [header, ...dataRows].join('\n');
-            
+
             try {
                 await navigator.clipboard.writeText(allData);
                 showInfo('Copied ' + alignedGradeData.length + ' student records (ID + Grade) to clipboard for archival');
@@ -1634,10 +1673,10 @@
         // Phase 5 - Update alignment statistics
         function updateAlignmentStats() {
             if (alignedGradeData.length === 0) return;
-            
+
             // Filter out students that were not found
             const foundStudents = alignedGradeData.filter(student => student.found);
-            
+
             if (foundStudents.length === 0) {
                 // No students found, show zeros
                 document.getElementById('alignment-mean').textContent = '--';
@@ -1647,29 +1686,29 @@
                 document.getElementById('id-match-stats').style.display = 'none';
                 return;
             }
-            
+
             // Calculate statistics
             const grades = foundStudents.map(student => student.grade);
             const mean = grades.reduce((sum, grade) => sum + grade, 0) / grades.length;
             const passCount = grades.filter(grade => grade <= 4.0).length;
             const passRate = (passCount / grades.length) * 100;
-            
+
             // Calculate checksum: average of (studentId * grade) for found students
             const checksumSum = foundStudents.reduce((sum, student) => {
                 const id = parseInt(student.mtknr) || 0;
                 return sum + (id * student.grade);
             }, 0);
             const checksum = checksumSum / foundStudents.length;
-            
+
             // Update display
             document.getElementById('alignment-mean').textContent = mean.toFixed(2);
             document.getElementById('alignment-pass-rate').textContent = passRate.toFixed(1) + '%';
             document.getElementById('alignment-pass-count').textContent = `${passCount}/${foundStudents.length}`;
             document.getElementById('alignment-checksum').textContent = checksum.toFixed(0);
-            
+
             // Update Excel formula with dynamic range
             updateExcelFormula();
-            
+
             // Show the statistics section
             document.getElementById('id-match-stats').style.display = 'block';
         }
@@ -1677,15 +1716,15 @@
         // Phase 5 - Update Excel formula with correct cell range
         function updateExcelFormula() {
             if (alignedGradeData.length === 0) return;
-            
+
             // Calculate the range based on the data
             // Assume Excel starts at row 6 (typical for a table with headers)
             const startRow = 6;
             const endRow = startRow + alignedGradeData.length - 1;
-            
+
             // Generate formula: =AVERAGE(F6:F20 * G6:G20) where F=IDs, G=Grades
             const formula = `=AVERAGE(F${startRow}:F${endRow} * G${startRow}:G${endRow})`;
-            
+
             document.getElementById('excel-formula').value = formula;
         }
 
@@ -1693,7 +1732,7 @@
         async function handleCopyFormula() {
             const formulaInput = document.getElementById('excel-formula');
             const formula = formulaInput.value;
-            
+
             try {
                 await navigator.clipboard.writeText(formula);
                 showInfo('Excel formula copied to clipboard!');
@@ -1723,47 +1762,72 @@
         function clearErrors() {
             document.getElementById('error-container').innerHTML = '';
         }
-        
+
+        // Performance Optimization: Debounce function
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        // Performance Optimization: Debounced table update
+        // We delay the heavy DOM manipulation of the table so it doesn't block slider interaction
+        const debouncedUpdateTable = debounce(() => {
+            updateGradingTable();
+        }, 150); // 150ms delay
+
         // Phase 5 - Number input change handler
         function handleInputChange(event) {
             const inputId = event.target.id;
             const value = parseFloat(event.target.value);
-            
+
             // Validate input
             if (isNaN(value)) return;
-            
+
             if (inputId === 'p1-input') {
                 const p1Slider = document.getElementById('p1-slider');
-                
+
                 // Ensure value is within slider bounds
                 const clampedValue = Math.max(parseFloat(p1Slider.min), Math.min(parseFloat(p1Slider.max), value));
-                
+
                 currentP1 = clampedValue;
                 p1Slider.value = currentP1;
                 event.target.value = currentP1;
-                
+
             } else if (inputId === 'p4-input') {
                 const p4Slider = document.getElementById('p4-slider');
-                
+
                 // Ensure value is within slider bounds
                 const clampedValue = Math.max(parseFloat(p4Slider.min), Math.min(parseFloat(p4Slider.max), value));
-                
+
                 currentP4 = clampedValue;
                 p4Slider.value = currentP4;
                 event.target.value = currentP4;
             }
-            
+
             // Show warning if P1 <= P4 but don't prevent it
             checkThresholdValidity();
-            
+
             // Recalculate grades if data is loaded
             if (gradingData.length > 0) {
                 calculateGrades();
-                updateGradingTable();
                 updateSummaryStats();
-                updateCharts(); // Phase 3: Update charts
+
+                // Optimize updates
+                requestAnimationFrame(() => {
+                    updateCharts(); // Fast chart update
+                });
+
+                debouncedUpdateTable(); // Debounced table update
             }
         }
     </script>
 </body>
+
 </html>
