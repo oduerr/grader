@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Grader Enter</title>
+    <style>
+        :root {
+            --primary-color: #007bff;
+            --bg-color: #f8f9fa;
+            --text-color: #212529;
+            --card-bg: #ffffff;
+            --border-color: #dee2e6;
+            --success-color: #28a745;
+            --danger-color: #dc3545;
+            --keypad-btn-bg: #e9ecef;
+            --keypad-btn-active: #ced4da;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --primary-color: #0d6efd;
+                --bg-color: #212529;
+                --text-color: #f8f9fa;
+                --card-bg: #343a40;
+                --border-color: #495057;
+                --keypad-btn-bg: #495057;
+                --keypad-btn-active: #6c757d;
+            }
+        }
+
+        * {
+            box-sizing: border-box;
+            touch-action: manipulation;
+            /* Disable double-tap zoom */
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        header {
+            background-color: var(--card-bg);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 1.25rem;
+        }
+
+        .controls {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        #main-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 1rem;
+            overflow-y: auto;
+            max-width: 800px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .screen {
+            display: none;
+            /* Hidden by default */
+            flex-direction: column;
+            gap: 1.5rem;
+            flex: 1;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        label {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .display-value {
+            font-size: 2rem;
+            font-family: monospace;
+            padding: 0.5rem;
+            border: 2px solid var(--primary-color);
+            border-radius: 0.25rem;
+            background-color: var(--bg-color);
+            min-height: 3.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            cursor: pointer;
+            /* To indicate focusability if needed */
+        }
+
+        .display-value.placeholder {
+            color: #adb5bd;
+        }
+
+        .step-indicator {
+            font-size: 0.9rem;
+            color: #6c757d;
+            text-align: center;
+            margin-bottom: 0.5rem;
+        }
+
+        /* Keypad Styles */
+        #keypad {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.5rem;
+            margin-top: auto;
+            /* Push to bottom on mobile */
+            padding-top: 1rem;
+        }
+
+        .key-btn {
+            background-color: var(--keypad-btn-bg);
+            border: none;
+            border-radius: 0.5rem;
+            font-size: 1.5rem;
+            padding: 1rem 0;
+            color: var(--text-color);
+            cursor: pointer;
+            transition: background-color 0.1s;
+            user-select: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .key-btn:active {
+            background-color: var(--keypad-btn-active);
+        }
+
+        .key-btn.primary {
+            background-color: var(--primary-color);
+            color: white;
+            grid-column: span 1;
+        }
+
+        .key-btn.danger {
+            background-color: var(--danger-color);
+            color: white;
+        }
+
+        .key-btn-wide {
+            grid-column: span 2;
+        }
+
+        /* Utility */
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.25rem;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+        }
+
+        .btn-large {
+            width: 100%;
+            padding: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .list-group {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            border: 1px solid var(--border-color);
+            border-radius: 0.25rem;
+        }
+
+        .list-group-item {
+            padding: 0.75rem 1.25rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .list-group-item:last-child {
+            border-bottom: none;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Desktop Hints */
+        #keyboard-hints {
+            display: none;
+            font-size: 0.8rem;
+            color: #6c757d;
+            margin-top: 1rem;
+            background: var(--card-bg);
+            padding: 0.5rem;
+            border-radius: 0.25rem;
+            border: 1px solid var(--border-color);
+        }
+
+        @media (min-width: 768px) {
+            #keyboard-hints {
+                display: block;
+            }
+
+            #keypad {
+                max-width: 400px;
+                margin: 2rem auto 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <h1>Grader Enter</h1>
+        <div class="controls">
+            <label for="tts-toggle" style="font-size: 0.9rem; cursor: pointer;">
+                <input type="checkbox" id="tts-toggle" checked> Read aloud
+            </label>
+        </div>
+    </header>
+
+    <div id="main-container">
+        <!-- Setup Screen -->
+        <div id="setup-screen" class="screen active">
+            <div class="card">
+                <h2>Welcome</h2>
+                <p>Import a TSV file to start grading or configure manually.</p>
+
+                <div class="input-group">
+                    <input type="file" id="tsv-upload" accept=".tsv,.txt" style="display: none;">
+                    <button class="btn btn-primary btn-large" onclick="document.getElementById('tsv-upload').click()">
+                        📂 Load TSV
+                    </button>
+                </div>
+
+                <hr style="width: 100%; border-top: 1px solid var(--border-color); margin: 1.5rem 0;">
+
+                <details>
+                    <summary style="cursor: pointer; padding: 0.5rem;">Manual Configuration</summary>
+                    <div class="input-group" style="margin-top: 1rem;">
+                        <label>Number of Tasks</label>
+                        <input type="number" id="manual-task-count" value="4" min="1" max="20"
+                            style="padding: 0.5rem; font-size: 1rem;">
+                        <button id="btn-manual-start" class="btn btn-outline" style="margin-top: 0.5rem;">Start
+                            Manually</button>
+                    </div>
+                </details>
+            </div>
+        </div>
+
+        <!-- Entry Screen -->
+        <div id="entry-screen" class="screen">
+            <div class="step-indicator" id="step-indicator">Matriculation Number</div>
+
+            <div class="card">
+                <h2 id="input-label">Matriculation</h2>
+                <div class="display-value" id="current-input"></div>
+            </div>
+
+            <div id="keyboard-hints">
+                <strong>Desktop:</strong> Enter=Next | Backspace=Delete | Esc=Back | Ctrl+Z=Undo
+            </div>
+
+            <div id="keypad">
+                <button class="key-btn" data-key="7">7</button>
+                <button class="key-btn" data-key="8">8</button>
+                <button class="key-btn" data-key="9">9</button>
+                <button class="key-btn danger" data-key="BACKSPACE">⌫</button>
+
+                <button class="key-btn" data-key="4">4</button>
+                <button class="key-btn" data-key="5">5</button>
+                <button class="key-btn" data-key="6">6</button>
+                <button class="key-btn" data-key="CLEAR">C</button>
+
+                <button class="key-btn" data-key="1">1</button>
+                <button class="key-btn" data-key="2">2</button>
+                <button class="key-btn" data-key="3">3</button>
+                <button class="key-btn primary" data-key="ENTER" style="grid-row: span 2;">↵</button>
+
+                <button class="key-btn key-btn-wide" data-key="0">0</button>
+                <button class="key-btn" data-key=".">.</button>
+            </div>
+        </div>
+
+        <!-- Review Screen -->
+        <div id="review-screen" class="screen">
+            <div class="card">
+                <h2>Review Entry</h2>
+                <div id="review-content">
+                    <!-- Content populated by JS -->
+                </div>
+                <div style="margin-top: 1.5rem; display: flex; gap: 1rem;">
+                    <button id="btn-correct" class="btn btn-outline" style="flex: 1;">Correct</button>
+                    <button id="btn-confirm" class="btn btn-primary" style="flex: 1;">Confirm</button>
+                </div>
+                <button id="btn-replay" class="btn btn-outline" style="width: 100%; margin-top: 1rem;">🔊
+            </div>
+        </div>
+
+        <!-- History / Export Screen -->
+        <div id="export-screen" class="screen">
+            <div class="card">
+                <h2>Export Data</h2>
+                <p id="record-count">0 records collected.</p>
+                <div style="display: flex; gap: 1rem; flex-direction: column;">
+                    <button id="btn-download" class="btn btn-primary">Download TSV</button>
+                    <button id="btn-copy" class="btn btn-outline">Copy to Clipboard</button>
+                    <button id="btn-continue-grading" class="btn btn-outline">Continue Grading</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Duplicate Resolution Modal -->
+        <div id="duplicate-modal" class="screen"
+            style="background: rgba(0,0,0,0.5); position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 100; justify-content: center; align-items: center;">
+            <div class="card" style="width: 90%; max-width: 400px;">
+                <h3 class="text-danger">Duplicate Matriculation</h3>
+                <p>Number <strong id="dup-mtknr"></strong> already exists.</p>
+                <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                    <button id="btn-dup-overwrite" class="btn btn-danger">Overwrite Existing</button>
+                    <button id="btn-dup-duplicate" class="btn btn-primary">Add as Duplicate</button>
+                    <button id="btn-dup-cancel" class="btn btn-outline">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /**
+         * Grader App Logic
+         * Handles state, input, navigation, TTS, and data persistence.
+         */
+
+        // --- State Management ---
+        const state = {
+            tasks: [],          // Array of strings: ["Task1", "Task2", ...]
+            records: [],        // Array of objects: { mtknr: "123", scores: { "Task1": 10 }, ... }
+            currentEntry: {
+                mtknr: "",
+                scores: {}      // Map taskName -> score (string or number)
+            },
+            step: 0,            // 0 = Matriculation, 1...N = Tasks
+            historyStack: [],    // Stack for undo functionality ?? Maybe not needed if we just pop records
+            isReviewing: false,
+            isExporting: false
+        };
+
+        // --- DOM Elements ---
+        const screens = {
+            setup: document.getElementById('setup-screen'),
+            entry: document.getElementById('entry-screen'),
+            review: document.getElementById('review-screen'),
+            export: document.getElementById('export-screen'),
+            duplicate: document.getElementById('duplicate-modal')
+        };
+
+        const ui = {
+            currentInput: document.getElementById('current-input'),
+            inputLabel: document.getElementById('input-label'),
+            stepIndicator: document.getElementById('step-indicator'),
+            reviewContent: document.getElementById('review-content'),
+            ttsToggle: document.getElementById('tts-toggle'),
+            manualTaskCount: document.getElementById('manual-task-count'),
+            recordCount: document.getElementById('record-count'),
+            tsvUpload: document.getElementById('tsv-upload'),
+            dupMtknr: document.getElementById('dup-mtknr')
+        };
+
+        // --- Init & Setup ---
+        function init() {
+            // Event Listeners for Setup
+            document.getElementById('btn-manual-start').addEventListener('click', startManualSetup);
+            ui.tsvUpload.addEventListener('change', handleTSVUpload);
+
+            // Event Listeners for Entry/Nav
+            document.querySelectorAll('.key-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault(); // Prevent double firing on some touch devices
+                    handleInput(btn.dataset.key);
+                });
+            });
+
+            // Physical Keyboard
+            document.addEventListener('keydown', handleKeyboardInput);
+
+            // Review Screen Buttons
+            document.getElementById('btn-confirm').addEventListener('click', confirmEntry);
+            document.getElementById('btn-correct').addEventListener('click', correctEntry);
+            document.getElementById('btn-replay').addEventListener('click', playReviewTTS);
+
+            // Export Screen Buttons
+            document.getElementById('btn-download').addEventListener('click', downloadTSV);
+            document.getElementById('btn-copy').addEventListener('click', copyTSVToClipboard);
+            document.getElementById('btn-continue-grading').addEventListener('click', () => {
+                switchToEntryPoint(); // Correctly return to entry
+            });
+
+            // Duplicate Modal Buttons
+            document.getElementById('btn-dup-overwrite').addEventListener('click', () => resolveDuplicate('overwrite'));
+            document.getElementById('btn-dup-duplicate').addEventListener('click', () => resolveDuplicate('duplicate'));
+            document.getElementById('btn-dup-cancel').addEventListener('click', () => resolveDuplicate('cancel'));
+        }
+
+        function startManualSetup() {
+            const count = parseInt(ui.manualTaskCount.value, 10);
+            if (count < 1 || count > 50) return alert("Please enter a valid number of tasks (1-50).");
+
+            state.tasks = Array.from({ length: count }, (_, i) => `A${i + 1}`);
+            startGrading();
+        }
+
+        function handleTSVUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const text = event.target.result;
+                parseTSV(text);
+            };
+            reader.readAsText(file);
+        }
+
+        function parseTSV(text) {
+            const lines = text.trim().split('\n');
+            if (lines.length === 0) return alert("Empty file.");
+
+            const header = lines[0].split('\t').map(h => h.trim());
+            if (header.length < 2) return alert("Invalid TSV format. Expected at least 'mtknr' and one task.");
+
+            // Infer tasks: assume first col is mtknr, rest are tasks
+            state.tasks = header.slice(1);
+
+            // Parse existing records
+            state.records = [];
+            for (let i = 1; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if (!line) continue;
+
+                const cols = line.split('\t');
+                const mtknr = cols[0].trim();
+                const scores = {};
+
+                state.tasks.forEach((task, idx) => {
+                    scores[task] = cols[idx + 1] ? parseFloat(cols[idx + 1]) : 0;
+                });
+
+                state.records.push({ mtknr, scores });
+            }
+
+            console.log(`Imported ${state.records.length} records. Tasks: ${state.tasks.join(', ')}`);
+            startGrading();
+        }
+
+        function startGrading() {
+            state.step = 0;
+            state.currentEntry = { mtknr: "", scores: {} };
+            state.isReviewing = false;
+            state.isExporting = false;
+
+            updateUI();
+            showScreen('entry');
+        }
+
+        // --- Core Logic ---
+
+        function handleInput(key) {
+            if (state.isReviewing || screens.duplicate.classList.contains('active')) {
+                if (state.isReviewing && key === 'ENTER') confirmEntry();
+                // Ignore other keys in review mod except maybe ESC?
+                return;
+            }
+
+            let val = getCurrentValue();
+
+            if (key === 'ENTER') {
+                nextStep();
+            } else if (key === 'BACKSPACE') {
+                val = val.slice(0, -1);
+                setCurrentValue(val);
+            } else if (key === 'CLEAR') {
+                setCurrentValue("");
+            } else if (key === 'ESC') {
+                // Go back a step if possible
+                prevStep();
+            } else {
+                // Digits & Dot
+                if (key === '.' && val.includes('.')) return; // Prevent double dot
+                if (val.length > 10) return; // Limit length
+                setCurrentValue(val + key);
+            }
+        }
+
+        function handleKeyboardInput(e) {
+            // Global shortcuts
+            if ((e.metaKey || e.ctrlKey) && e.key === 'z') {
+                e.preventDefault();
+                undoLastRecord();
+                return;
+            }
+
+            if (state.isExporting && e.key === 'Escape') {
+                switchToEntryPoint();
+                return;
+            }
+
+            if (screens.duplicate.classList.contains('active')) return; // Ignore keys if modal is open
+
+            // Only handle keys if we are in entry or review mode
+            if (!screens.entry.classList.contains('active') && !screens.review.classList.contains('active')) return;
+
+            const keyMap = {
+                'Enter': 'ENTER',
+                'Backspace': 'BACKSPACE',
+                'Escape': 'ESC',
+                'Delete': 'CLEAR'
+            };
+
+            if (keyMap[e.key]) {
+                e.preventDefault();
+                if (e.key === 'Escape' && state.isReviewing) {
+                    correctEntry(); // ESC in review goes back to correct
+                } else if (e.key === 'Escape') {
+                    prevStep();
+                } else {
+                    handleInput(keyMap[e.key]);
+                }
+            } else if (/^[0-9.]$/.test(e.key)) {
+                e.preventDefault();
+                handleInput(e.key);
+            }
+        }
+
+        function getCurrentValue() {
+            if (state.step === 0) {
+                return state.currentEntry.mtknr;
+            } else {
+                const taskName = state.tasks[state.step - 1];
+                return state.currentEntry.scores[taskName] !== undefined ? String(state.currentEntry.scores[taskName]) : "";
+            }
+        }
+
+        function setCurrentValue(val) {
+            if (state.step === 0) {
+                state.currentEntry.mtknr = val;
+            } else {
+                const taskName = state.tasks[state.step - 1];
+                state.currentEntry.scores[taskName] = val;
+            }
+            updateDisplay();
+        }
+
+        function nextStep() {
+            const val = getCurrentValue();
+
+            // Validation
+            if (val === "") return; // Don't advance on empty
+            if (state.step === 0) {
+                // Check duplicate mtknr
+                const exists = state.records.find(r => r.mtknr === val);
+                if (exists) {
+                    showDuplicateModal(val);
+                    return; // Stop here, wait for modal resolution
+                }
+            } else {
+                // Validate score is number
+                if (isNaN(parseFloat(val))) return;
+            }
+
+            if (state.step < state.tasks.length) {
+                state.step++;
+                updateUI();
+            } else {
+                showReview();
+            }
+        }
+
+        function showDuplicateModal(mtknr) {
+            ui.dupMtknr.textContent = mtknr;
+            screens.duplicate.classList.add('active');
+        }
+
+        function resolveDuplicate(action) {
+            screens.duplicate.classList.remove('active');
+            if (action === 'cancel') {
+                // Do nothing, stay on mtknr input
+                return;
+            }
+
+            if (action === 'overwrite') {
+                // Remove the old record with the same mtknr
+                state.records = state.records.filter(r => r.mtknr !== state.currentEntry.mtknr);
+            }
+
+            // Proceed to the next step (task input)
+            state.step++;
+            updateUI();
+        }
+
+        function prevStep() {
+            if (state.step > 0) {
+                state.step--;
+                updateUI();
+            }
+        }
+
+        function updateUI() {
+            // Update Label
+            if (state.step === 0) {
+                ui.inputLabel.innerText = "Matriculation Number";
+                ui.stepIndicator.innerText = "Step 1 / " + (state.tasks.length + 1);
+            } else {
+                const taskName = state.tasks[state.step - 1];
+                ui.inputLabel.innerText = `Score for ${taskName}`;
+                ui.stepIndicator.innerText = `Step ${state.step + 1} / ${state.tasks.length + 1}`;
+            }
+
+            updateDisplay();
+        }
+
+        function updateDisplay() {
+            const val = getCurrentValue();
+            ui.currentInput.textContent = val;
+            if (val === "") {
+                ui.currentInput.classList.add('placeholder');
+                ui.currentInput.textContent = "Enter value...";
+            } else {
+                ui.currentInput.classList.remove('placeholder');
+            }
+        }
+
+        function showReview() {
+            state.isReviewing = true;
+            showScreen('review'); // Switch to review screen
+
+            let html = `<div class="list-group">
+            <div class="list-group-item"><strong>Matriculation</strong> <span>${state.currentEntry.mtknr}</span></div>`;
+
+            state.tasks.forEach(task => {
+                const score = state.currentEntry.scores[task];
+                html += `<div class="list-group-item"><span>${task}</span> <span>${score}</span></div>`;
+            });
+            html += `</div>`;
+            ui.reviewContent.innerHTML = html;
+
+            if (ui.ttsToggle.checked) {
+                playReviewTTS();
+            }
+        }
+
+        function playReviewTTS() {
+            // Cancel any ongoing speech
+            window.speechSynthesis.cancel();
+
+            if (!ui.ttsToggle.checked) return;
+
+            // Simplified: Just digits/values
+            const mtknrDigits = state.currentEntry.mtknr.split('').join(' ');
+            let text = `${mtknrDigits}. `;
+
+            state.tasks.forEach(task => {
+                text += `${state.currentEntry.scores[task]}. `;
+            });
+
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.rate = 1.2;
+            window.speechSynthesis.speak(utterance);
+        }
+
+        function confirmEntry() {
+            window.speechSynthesis.cancel();
+
+            // Save record
+            state.records.push(JSON.parse(JSON.stringify(state.currentEntry)));
+
+            // Update history
+            updateHistoryDisplay();
+
+            // Reset
+            state.currentEntry = { mtknr: "", scores: {} };
+            state.step = 0;
+            state.isReviewing = false;
+
+            showScreen('entry');
+            updateUI();
+        }
+
+        function updateHistoryDisplay() {
+            if (!ui.historyList) return;
+
+            if (state.records.length === 0) {
+                ui.historyList.innerHTML = '<em style="color: #adb5bd;">No records yet.</em>';
+                return;
+            }
+
+            // Show last 5
+            const recent = state.records.slice(-5).reverse();
+            let html = '<table class="history-table"><thead><tr><th>Mtknr</th>';
+
+            // Header
+            state.tasks.forEach(t => html += `<th>${t}</th>`);
+            html += '</tr></thead><tbody>';
+
+            recent.forEach(r => {
+                html += `<tr><td>${r.mtknr}</td>`;
+                state.tasks.forEach(t => {
+                    html += `<td>${r.scores[t]}</td>`;
+                });
+                html += `</tr>`;
+            });
+            html += '</tbody></table>';
+
+            ui.historyList.innerHTML = html;
+        }
+
+        function correctEntry() {
+            window.speechSynthesis.cancel();
+            state.isReviewing = false;
+            showScreen('entry');
+            // Stay at last step (last task) to allow correction
+            state.step = state.tasks.length;
+            updateUI();
+        }
+
+        function undoLastRecord() {
+            if (state.records.length === 0) return alert("Nothing to undo.");
+            if (confirm("Delete last saved record?")) {
+                state.records.pop();
+                updateHistoryDisplay();
+            }
+        }
+
+        // --- Data Export & View ---
+
+        // Add a button/method to view export screen from entry ?? 
+        // Requirement didn't explicitly ask for a "Menu" button, but "Export TSV" button is needed.
+        // Let's add a "Finish / Export" button to the Setup/Header or just a trigger.
+
+        // Adding a simple "Export" button to header
+        const headerControls = document.querySelector('header .controls');
+        const exportBtn = document.createElement('button');
+        exportBtn.innerText = "Export";
+        exportBtn.className = "btn btn-outline";
+        exportBtn.style.fontSize = "0.8rem";
+        exportBtn.style.padding = "0.25rem 0.5rem";
+        exportBtn.style.marginLeft = "1rem";
+        exportBtn.onclick = showExportScreen;
+        headerControls.appendChild(exportBtn);
+
+        function showExportScreen() {
+            state.isExporting = true;
+            ui.recordCount.innerText = `${state.records.length} records collected.`;
+            showScreen('export');
+        }
+
+        function switchToEntryPoint() {
+            state.isExporting = false;
+            showScreen('entry');
+        }
+
+        function generateTSV() {
+            let tsv = "mtknr\t" + state.tasks.join('\t') + "\n";
+            state.records.forEach(r => {
+                const row = [r.mtknr];
+                state.tasks.forEach(t => row.push(r.scores[t]));
+                tsv += row.join('\t') + "\n";
+            });
+            return tsv;
+        }
+
+        function downloadTSV() {
+            const text = generateTSV();
+            const blob = new Blob([text], { type: 'text/tab-separated-values' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'grades.tsv';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        function copyTSVToClipboard() {
+            const text = generateTSV();
+            navigator.clipboard.writeText(text).then(() => {
+                alert("Copied to clipboard!");
+            }).catch(err => {
+                console.error(err);
+                alert("Failed to copy.");
+            });
+        }
+
+        // --- Helpers ---
+        function showScreen(name) {
+            Object.values(screens).forEach(el => el.classList.remove('active'));
+            if (screens[name]) screens[name].classList.add('active');
+
+            // Focus management
+            if (name === 'entry') {
+                // Maybe focus something invisible to capture keyboard if not using input
+                document.body.focus();
+            }
+        }
+
+        // Initialize
+        init();
+
+    </script>
+
+</body>
+
+</html>
