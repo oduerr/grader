@@ -308,10 +308,6 @@
                 <div class="display-value" id="current-input"></div>
             </div>
 
-            <div id="keyboard-hints">
-                <strong>Desktop:</strong> Enter=Next | Backspace=Delete | Esc=Back | Ctrl+Z=Undo
-            </div>
-
             <div id="keypad">
                 <button class="key-btn" data-key="7">7</button>
                 <button class="key-btn" data-key="8">8</button>
@@ -331,6 +327,10 @@
                 <button class="key-btn key-btn-wide" data-key="0">0</button>
                 <button class="key-btn" data-key=".">.</button>
             </div>
+            <div id="keyboard-hints">
+                <strong>Desktop:</strong> Enter=Next | Backspace=Delete | Esc=Back | Ctrl+Z=Undo
+            </div>
+
         </div>
 
         <!-- Review Screen -->
@@ -341,7 +341,8 @@
                     <!-- Content populated by JS -->
                 </div>
                 <div style="margin-top: 1.5rem; display: flex; gap: 1rem;">
-                    <button id="btn-correct" class="btn btn-outline" style="flex: 1;">Correct</button>
+                    <button id="btn-discard" class="btn btn-outline"
+                        style="flex: 1; color: var(--danger-color); border-color: var(--danger-color);">Discard</button>
                     <button id="btn-confirm" class="btn btn-primary" style="flex: 1;">Confirm</button>
                 </div>
                 <button id="btn-replay" class="btn btn-outline" style="width: 100%; margin-top: 1rem;">🔊
@@ -436,7 +437,7 @@
 
             // Review Screen Buttons
             document.getElementById('btn-confirm').addEventListener('click', confirmEntry);
-            document.getElementById('btn-correct').addEventListener('click', correctEntry);
+            document.getElementById('btn-discard').addEventListener('click', discardEntry);
             document.getElementById('btn-replay').addEventListener('click', playReviewTTS);
 
             // Export Screen Buttons
@@ -570,7 +571,7 @@
             if (keyMap[e.key]) {
                 e.preventDefault();
                 if (e.key === 'Escape' && state.isReviewing) {
-                    correctEntry(); // ESC in review goes back to correct
+                    discardEntry(); // ESC in review triggers discard flow
                 } else if (e.key === 'Escape') {
                     prevStep();
                 } else {
@@ -714,7 +715,7 @@
             });
 
             const utterance = new SpeechSynthesisUtterance(text);
-            utterance.rate = 1.2;
+            utterance.rate = 0.8;
             window.speechSynthesis.speak(utterance);
         }
 
@@ -764,13 +765,17 @@
             ui.historyList.innerHTML = html;
         }
 
-        function correctEntry() {
+        function discardEntry() {
             window.speechSynthesis.cancel();
-            state.isReviewing = false;
-            showScreen('entry');
-            // Stay at last step (last task) to allow correction
-            state.step = state.tasks.length;
-            updateUI();
+            if (confirm("Discard this entry and start over?")) {
+                // Reset to start of entry
+                state.currentEntry = { mtknr: "", scores: {} };
+                state.step = 0;
+                state.isReviewing = false;
+
+                showScreen('entry');
+                updateUI();
+            }
         }
 
         function undoLastRecord() {
