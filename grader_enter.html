@@ -42,7 +42,8 @@
             padding: 0;
             background-color: var(--bg-color);
             color: var(--text-color);
-            height: 100vh;
+            height: 100dvh;
+            /* Use dynamic viewport height for mobile */
             display: flex;
             flex-direction: column;
             overflow: hidden;
@@ -74,7 +75,8 @@
             display: flex;
             flex-direction: column;
             padding: 1rem;
-            overflow-y: auto;
+            overflow-y: hidden;
+            /* Prevent double scrollbars, let screen handle it */
             max-width: 800px;
             margin: 0 auto;
             width: 100%;
@@ -90,6 +92,11 @@
 
         .screen.active {
             display: flex;
+            flex-direction: column;
+            height: 100%;
+            /* Take full height of container */
+            overflow-y: auto;
+            /* Scroll inside screen if needed */
         }
 
         .card {
@@ -145,6 +152,8 @@
             margin-top: auto;
             /* Push to bottom on mobile */
             padding-top: 1rem;
+            flex-shrink: 0;
+            /* Never shrink keypad */
         }
 
         .key-btn {
@@ -265,7 +274,10 @@
         <h1>Grader Enter</h1>
         <div class="controls">
             <label for="tts-toggle" style="font-size: 0.9rem; cursor: pointer;">
-                <input type="checkbox" id="tts-toggle" checked> Read aloud
+                <input type="checkbox" id="tts-toggle" checked> TTS
+            </label>
+            <label for="sound-toggle" style="font-size: 0.9rem; cursor: pointer; margin-left: 0.5rem;">
+                <input type="checkbox" id="sound-toggle" checked> Sound
             </label>
         </div>
     </header>
@@ -415,7 +427,59 @@
             manualTaskCount: document.getElementById('manual-task-count'),
             recordCount: document.getElementById('record-count'),
             tsvUpload: document.getElementById('tsv-upload'),
-            dupMtknr: document.getElementById('dup-mtknr')
+            dupMtknr: document.getElementById('dup-mtknr'),
+            soundToggle: document.getElementById('sound-toggle')
+        };
+
+        // --- Audio Context ---
+        let audioCtx = null;
+
+        function initAudio() {
+            if (!audioCtx) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                audioCtx = new AudioContext();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function playTone(freq, type = 'sine', duration = 0.1) {
+            if (!ui.soundToggle.checked) return;
+            initAudio();
+
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            osc.start();
+            osc.stop(audioCtx.currentTime + duration);
+        }
+
+        const keyTones = {
+            '0': 261.63, // C4
+            '1': 293.66, // D4
+            '2': 329.63, // E4
+            '3': 349.23, // F4
+            '4': 392.00, // G4
+            '5': 440.00, // A4
+            '6': 493.88, // B4
+            '7': 523.25, // C5
+            '8': 587.33, // D5
+            '9': 659.25, // E5
+            '.': 783.99, // G5
+            'ENTER': 880.00, // A5 (Confirmation)
+            'BACKSPACE': 150.00, // Low thud
+            'CLEAR': 100.00, // Lower thud
+            'ESC': 100.00
         };
 
         // --- Init & Setup ---
@@ -526,19 +590,28 @@
             let val = getCurrentValue();
 
             if (key === 'ENTER') {
+                playTone(keyTones['ENTER'], 'triangle', 0.15); // Confirmation sound
                 nextStep();
             } else if (key === 'BACKSPACE') {
+                playTone(keyTones['BACKSPACE'], 'sawtooth', 0.1);
                 val = val.slice(0, -1);
                 setCurrentValue(val);
             } else if (key === 'CLEAR') {
+                playTone(keyTones['CLEAR'], 'sawtooth', 0.2);
                 setCurrentValue("");
             } else if (key === 'ESC') {
+                playTone(keyTones['ESC'], 'sawtooth', 0.1);
                 // Go back a step if possible
                 prevStep();
             } else {
                 // Digits & Dot
                 if (key === '.' && val.includes('.')) return; // Prevent double dot
                 if (val.length > 10) return; // Limit length
+
+                if (keyTones[key]) {
+                    playTone(keyTones[key], 'sine', 0.1);
+                }
+
                 setCurrentValue(val + key);
             }
         }
