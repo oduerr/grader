@@ -627,8 +627,8 @@
 
         <div class="control-bar">
             <div class="file-input-container">
-                <label for="grading-file">Upload Grading File (.xlsx or .txt/.tsv)</label>
-                <input type="file" id="grading-file" accept=".xlsx,.txt,.tsv" />
+                <label for="grading-file">Upload Grading File (.xlsx, .csv, .txt/.tsv)</label>
+                <input type="file" id="grading-file" accept=".xlsx,.xls,.csv,.txt,.tsv" />
                 <div style="margin-top: 12px; font-size: 1.2rem; color: #666;">
                     Need a file? <a href="grader_enter.html" target="_blank"
                         style="color: var(--accent-color); text-decoration: none; font-weight: 500;">Create grading
@@ -783,6 +783,81 @@
         </div>
 
         <div id="error-container"></div>
+
+        <!-- Formula specification: self-contained, copy & paste into another agent/tool -->
+        <div class="section" id="formula-spec-section">
+            <h2>Grading Formula (Specification)</h2>
+            <p style="color: #666; font-size: 0.9em;">
+                Exactly what this tool computes, including the rounding steps. Copy it to hand the algorithm to
+                another agent or to reimplement it in R/Python/Excel.
+            </p>
+            <button id="copy-spec-btn" class="action-btn" style="margin-bottom: 10px;">Copy Specification</button>
+            <pre id="formula-spec" style="background: #f6f8fa; border: 1px solid #d0d7de; border-radius: 6px; padding: 15px; overflow-x: auto; font-size: 0.85em; line-height: 1.45; white-space: pre; color: #24292f;">
+GRADING FORMULA (linear interpolation + German grade steps)
+
+INPUTS
+  pkt = total points of one student = sum of all task columns (A1, A2, ... An).
+        Empty cells count as 0.
+  P1  = points required for grade 1.0 (best grade).
+  P4  = points required for grade 4.0 (worst passing grade).
+  Constraint: P1 > P4. More points => better (numerically lower) grade.
+  Defaults when a file is loaded (max_pkt = highest pkt in the cohort):
+        P1 = ceil(0.75 * max_pkt)
+        P4 = ceil(0.40 * max_pkt)
+  Both are then adjusted by hand with the two sliders.
+
+STEP 1 - POINTS
+  pkt = sum(task scores)
+
+STEP 2 - CONTINUOUS RAW NOTE (no rounding, no clamping)
+  The straight line through the two anchor points (P4, 4.0) and (P1, 1.0):
+
+    slope     = 3 / (P4 - P1)              # negative, since P4 < P1
+    intercept = 1 - 3 * P1 / (P4 - P1)
+    raw_note  = slope * pkt + intercept
+
+  Equivalent closed form:
+    raw_note  = 1 + 3 * (P1 - pkt) / (P1 - P4)
+
+  raw_note is NOT clamped: pkt > P1 gives raw_note < 1.0, and very low pkt
+  gives raw_note > 5. Only the mapping in step 3 bounds the result.
+
+STEP 3 - ROUNDING TO A DISCRETE GRADE
+  Take the FIRST interval whose upper bound is >= raw_note (upper bounds are
+  inclusive). This is the only rounding applied to the grade:
+
+    raw_note <= 1.15  ->  1.0
+    raw_note <= 1.50  ->  1.3
+    raw_note <= 1.85  ->  1.7
+    raw_note <= 2.15  ->  2.0
+    raw_note <= 2.50  ->  2.3
+    raw_note <= 2.85  ->  2.7
+    raw_note <= 3.15  ->  3.0
+    raw_note <= 3.50  ->  3.3
+    raw_note <= 3.85  ->  3.7
+    raw_note <= 4.15  ->  4.0
+    otherwise         ->  5.0   (failed)
+
+  Note: the grades 4.3 and 4.7 do not exist. Anything worse than 4.15 raw
+  becomes 5.0. A student with pkt exactly = P4 has raw_note 4.00 -> grade 4.0
+  (passed); a student with pkt exactly = P1 has raw_note 1.00 -> grade 1.0.
+
+DISPLAY ROUNDING (presentation only, does not feed back into any calculation)
+  pkt       shown with 1 decimal
+  raw_note  shown with 2 decimals
+  grade     shown with 1 decimal
+  Average grade and alignment mean: 2 decimals. Pass rate: 1 decimal.
+  Pass rate = share of students with grade <= 4.0.
+
+WORKED EXAMPLE
+  Cohort max_pkt = 34  =>  P1 = ceil(25.5) = 26,  P4 = ceil(13.6) = 14
+  Student with pkt = 18:
+    slope     = 3 / (14 - 26)          = -0.25
+    intercept = 1 - 3 * 26 / (14 - 26) =  7.5
+    raw_note  = -0.25 * 18 + 7.5       =  3.00
+    3.00 <= 3.15  =>  grade = 3.0
+</pre>
+        </div>
     </div>
 
     <!-- Loading Overlay -->
@@ -876,6 +951,9 @@
 
         // Phase 5 - Copy formula event listener
         document.getElementById('copy-formula-btn').addEventListener('click', handleCopyFormula);
+
+        // Copy the formula specification (for handing the algorithm to another tool/agent)
+        document.getElementById('copy-spec-btn').addEventListener('click', handleCopySpec);
 
         function handleFileUpload(event) {
             const file = event.target.files[0];
@@ -1001,6 +1079,63 @@
             return rows;
         }
 
+        // Looks at the last column and decides whether it is a per-row total rather than a task.
+        // Returns {index: -1} when it is a normal task column, {index: n} when it is a verified
+        // total, or {error: "..."} when it looks like a total but does not add up.
+        function detectTotalColumn(rawData, headers) {
+            const totalAliases = ['', 'sum', 'summe', 'total', 'gesamt', 'pkt', 'punkte', 'points', 'score', 'totalpoints'];
+            const lastIndex = headers.length - 1;
+
+            // Need at least mtknr + one task + the total column.
+            if (headers.length < 3) return { index: -1 };
+
+            const name = headers[lastIndex].toLowerCase().replace(/[\s._-]/g, '');
+            if (totalAliases.indexOf(name) === -1) return { index: -1 };
+
+            const cellAt = (row, j) => {
+                const value = row && row[j];
+                return (value === undefined || value === null) ? '' : value.toString().trim();
+            };
+
+            const mismatches = [];
+            let populatedRows = 0;
+
+            for (let i = 1; i < rawData.length; i++) {
+                const row = rawData[i];
+                if (!row || row.length === 0 || cellAt(row, 0) === '') continue;
+
+                const declared = cellAt(row, lastIndex);
+                if (declared === '') continue; // no total given for this student
+                populatedRows++;
+
+                let sum = 0;
+                for (let j = 1; j < lastIndex; j++) {
+                    const score = parseScore(cellAt(row, j));
+                    if (!isNaN(score)) sum += score;
+                }
+
+                const declaredValue = parseScore(declared);
+                if (isNaN(declaredValue) || Math.abs(declaredValue - sum) > 1e-6) {
+                    mismatches.push('line ' + (i + 1) + ': "' + truncate(declared, 12) + '" vs. sum ' + sum);
+                }
+            }
+
+            // An entirely empty trailing column is not a total; the column filter drops it anyway.
+            if (populatedRows === 0) return { index: -1 };
+
+            if (mismatches.length > 0) {
+                const label = headers[lastIndex] === '' ? 'The last column has no header' : 'The last column is named "' + headers[lastIndex] + '"';
+                return {
+                    error: label + ', so it was treated as a row total - but it does not match the sum of the task columns for ' +
+                        mismatches.length + ' student(s): ' + mismatches.slice(0, 5).join('; ') +
+                        (mismatches.length > 5 ? '; ...' : '') + '. ' +
+                        'Fix the totals, or give the column a task name if it really is a task.'
+                };
+            }
+
+            return { index: lastIndex };
+        }
+
         function splitLine(line, candidate) {
             return line
                 .trim()
@@ -1046,6 +1181,23 @@
                 if (headers.length < 2) {
                     showError('No task columns found. The header row only contains "' + headers[0] + '". Add one column per task, e.g. mtknr | A1 | A2.');
                     return;
+                }
+
+                // Some exports append a per-row total as the last column (often unnamed,
+                // i.e. the header line just ends with a trailing separator). Counting it as
+                // a task would double every student's points, so verify it against the sum
+                // of the task columns and drop it. A mismatch means the file is broken.
+                const totalColumn = detectTotalColumn(rawData, headers);
+                if (totalColumn.error) {
+                    showError(totalColumn.error);
+                    return;
+                }
+                let totalColumnNote = '';
+                if (totalColumn.index !== -1) {
+                    const name = headers[totalColumn.index] || '(unnamed)';
+                    totalColumnNote = '. Last column "' + name + '" was recognised as a row total and verified against the task columns';
+                    headers = headers.slice(0, totalColumn.index);
+                    rawData = rawData.map(row => row.slice(0, totalColumn.index));
                 }
 
                 // Phase 11 - Smart Column Filtering
@@ -1185,7 +1337,8 @@
                 updateCharts(); // Phase 3: Create initial charts
 
                 showInfo('Successfully loaded ' + gradingData.length + ' students (' + (filteredHeaders.length - 1) + ' task columns)' +
-                    (rowsWithoutId.length > 0 ? '. Skipped ' + rowsWithoutId.length + ' row(s) without a student ID (line ' + rowsWithoutId.slice(0, 5).join(', ') + ')' : ''));
+                    (rowsWithoutId.length > 0 ? '. Skipped ' + rowsWithoutId.length + ' row(s) without a student ID (line ' + rowsWithoutId.slice(0, 5).join(', ') + ')' : '') +
+                    totalColumnNote);
 
             } catch (error) {
                 showError('Error processing grading data: ' + error.message);
@@ -2022,6 +2175,17 @@
         }
 
         // Phase 5 - Copy Excel formula to clipboard
+        async function handleCopySpec() {
+            const spec = document.getElementById('formula-spec').textContent.trim();
+
+            try {
+                await navigator.clipboard.writeText(spec);
+                showInfo('Formula specification copied to clipboard!');
+            } catch (error) {
+                showError('Failed to copy the specification. Please select the text and copy it manually.');
+            }
+        }
+
         async function handleCopyFormula() {
             const formulaInput = document.getElementById('excel-formula');
             const formula = formulaInput.value;
