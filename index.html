@@ -884,40 +884,51 @@
             clearErrors();
 
             const fileName = file.name.toLowerCase();
-            const isExcel = fileName.endsWith('.xlsx');
-            const isTabSeparated = fileName.endsWith('.txt') || fileName.endsWith('.tsv');
+            const isExcel = fileName.endsWith('.xlsx') || fileName.endsWith('.xls');
+            const isText = fileName.endsWith('.txt') || fileName.endsWith('.tsv') || fileName.endsWith('.csv');
 
-            if (!isExcel && !isTabSeparated) {
-                showError('Please select an Excel file (.xlsx) or tab-separated file (.txt, .tsv)');
+            if (!isExcel && !isText) {
+                showError('Unsupported file type "' + file.name + '". Please select an Excel file (.xlsx) or a text table (.txt, .tsv, .csv).');
                 return;
             }
 
             const reader = new FileReader();
+
+            reader.onerror = function () {
+                showError('Could not read "' + file.name + '". The file may be locked by another program or unreadable.');
+            };
+
             reader.onload = function (e) {
                 try {
                     let jsonData;
 
                     if (isExcel) {
-                        // Handle Excel files
                         const workbook = XLSX.read(e.target.result, { type: 'binary' });
+                        if (!workbook.SheetNames || workbook.SheetNames.length === 0) {
+                            showError('The Excel file "' + file.name + '" contains no sheets.');
+                            return;
+                        }
                         const firstSheetName = workbook.SheetNames[0];
                         const worksheet = workbook.Sheets[firstSheetName];
-                        jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                        jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false });
+                        jsonData = jsonData.filter(row => Array.isArray(row) && row.some(cell => cell !== undefined && cell !== null && cell.toString().trim() !== ''));
                     } else {
-                        // Handle tab-separated files
-                        const text = e.target.result;
-                        const lines = text.split('\n').filter(line => line.trim().length > 0);
-                        jsonData = lines.map(line => line.split('\t'));
+                        jsonData = parseDelimitedText(e.target.result, file.name);
+                        if (!jsonData) return; // parseDelimitedText already reported the problem
                     }
 
+                    if (jsonData.length === 0) {
+                        showError('"' + file.name + '" is empty. Expected a header row (mtknr + task columns) and one row per student.');
+                        return;
+                    }
                     if (jsonData.length < 2) {
-                        showError('File must contain at least a header row and one data row');
+                        showError('"' + file.name + '" contains only a header row (' + describeRow(jsonData[0]) + ') but no student rows.');
                         return;
                     }
 
                     processGradingData(jsonData);
                 } catch (error) {
-                    showError('Error reading file: ' + error.message);
+                    showError('Could not read "' + file.name + '": ' + error.message);
                 }
             };
 
@@ -928,13 +939,112 @@
             }
         }
 
+        // Splits a text table into rows of cells, auto-detecting the column separator.
+        // Returns null (after showing an error) if no usable structure is found.
+        function parseDelimitedText(rawText, fileName) {
+            const text = rawText.replace(/^﻿/, ''); // strip BOM written by Excel exports
+            const lines = text.split(/\r\n|\r|\n/).filter(line => line.trim().length > 0);
+
+            if (lines.length === 0) {
+                showError('"' + fileName + '" is empty.');
+                return null;
+            }
+
+            const candidates = [
+                { name: 'tab', regex: /\t/ },
+                { name: 'semicolon', regex: /;/ },
+                { name: 'comma', regex: /,/ },
+                { name: 'pipe', regex: /\|/ },
+                { name: 'space', regex: /[ \t]+/ }
+            ];
+
+            // Pick the separator that splits the header into the most columns.
+            // Space is only used as a fallback because scores never contain spaces.
+            let best = null;
+            for (const candidate of candidates) {
+                const columns = splitLine(lines[0], candidate);
+                if (columns.length > 1 && (!best || columns.length > best.columns)) {
+                    best = { candidate: candidate, columns: columns.length };
+                }
+                if (candidate.name === 'space' && best) break;
+            }
+
+            if (!best) {
+                showError(
+                    'Could not find any column separator in "' + fileName + '". ' +
+                    'The first line reads: "' + truncate(lines[0], 80) + '". ' +
+                    'Expected columns separated by tabs, spaces, semicolons or commas, e.g. "mtknr\tA1\tA2".'
+                );
+                return null;
+            }
+
+            const rows = lines.map(line => splitLine(line, best.candidate));
+
+            // A ragged table usually means the wrong separator was guessed - say so explicitly.
+            const headerWidth = rows[0].length;
+            const ragged = [];
+            for (let i = 1; i < rows.length; i++) {
+                if (rows[i].length !== headerWidth) {
+                    ragged.push('line ' + (i + 1) + ' has ' + rows[i].length);
+                }
+            }
+            if (ragged.length > 0) {
+                showError(
+                    'Inconsistent number of columns in "' + fileName + '" (detected separator: ' + best.candidate.name + '). ' +
+                    'The header has ' + headerWidth + ' columns, but ' + ragged.slice(0, 3).join(', ') +
+                    (ragged.length > 3 ? ' (and ' + (ragged.length - 3) + ' more)' : '') + '. ' +
+                    'Please make sure every student row has one value per column.'
+                );
+                return null;
+            }
+
+            return rows;
+        }
+
+        function splitLine(line, candidate) {
+            return line
+                .trim()
+                .split(candidate.regex)
+                .map(cell => cell.trim().replace(/^"(.*)"$/, '$1').trim());
+        }
+
+        // Accepts "8", "8.5" and the German "8,5"; returns NaN for anything else.
+        function parseScore(value) {
+            if (value === undefined || value === null) return NaN;
+            const text = value.toString().trim();
+            if (text === '') return NaN;
+            if (!/^[+-]?\d+([.,]\d+)?$/.test(text)) return NaN;
+            return parseFloat(text.replace(',', '.'));
+        }
+
+        function describeRow(row) {
+            return row.map(cell => (cell === undefined || cell === null) ? '' : cell.toString()).join(' | ');
+        }
+
+        function truncate(text, maxLength) {
+            return text.length > maxLength ? text.slice(0, maxLength) + '...' : text;
+        }
+
         function processGradingData(rawData) {
             try {
-                let headers = rawData[0];
+                let headers = rawData[0].map(h => (h === undefined || h === null) ? '' : h.toString().trim());
 
-                // Validate that first column is mtknr
-                if (!headers[0] || headers[0].toLowerCase() !== 'mtknr') {
-                    showError('First column must be "mtknr" (student ID)');
+                // Validate the first column holds the student ID. Accept the common
+                // spellings that come out of Excel / HISinOne exports.
+                const idAliases = ['mtknr', 'mtk-nr', 'matrikelnummer', 'matrikel', 'matrikelnr', 'matrikel-nr', 'studentid', 'student id', 'id'];
+                const firstHeader = headers[0].toLowerCase().replace(/[._]/g, '');
+
+                if (idAliases.indexOf(firstHeader) === -1) {
+                    showError(
+                        'The first column must be the student ID ("mtknr"), but the header row starts with "' + (headers[0] || '(empty)') + '". ' +
+                        'Detected header: ' + describeRow(headers) + ' (' + headers.length + ' columns). ' +
+                        'Expected something like: mtknr | A1 | A2 | A3 | A4'
+                    );
+                    return;
+                }
+
+                if (headers.length < 2) {
+                    showError('No task columns found. The header row only contains "' + headers[0] + '". Add one column per task, e.g. mtknr | A1 | A2.');
                     return;
                 }
 
@@ -959,8 +1069,11 @@
                 // Filter headers based on active columns
                 const filteredHeaders = headers.filter((_, index) => columnsWithData.has(index));
 
-                // Process data rows
-                gradingData = [];
+                // Process data rows into a local array first, so a validation failure
+                // leaves the previously loaded data untouched.
+                const parsedStudents = [];
+                const badCells = [];   // non-numeric score cells, reported with their line number
+                const rowsWithoutId = [];
                 for (let i = 1; i < rawData.length; i++) {
                     const row = rawData[i];
                     if (!row || row.length === 0) continue; // Skip empty rows
@@ -968,34 +1081,55 @@
                     // Create filtered row preserving only active columns
                     const filteredRow = row.filter((_, index) => columnsWithData.has(index));
 
+                    const mtknr = (row[0] === undefined || row[0] === null) ? '' : row[0].toString().trim();
+                    if (!mtknr) {
+                        rowsWithoutId.push(i + 1);
+                        continue;
+                    }
+
                     const studentData = {
-                        mtknr: row[0],
+                        mtknr: mtknr,
                         taskScores: [],
                         originalRow: filteredRow // Use filtered row for display
                     };
 
-                    // Extract numeric task scores (columns 1 onwards from ORIGINAL data)
-                    // We must still process all score columns for calculation, even if hidden? 
-                    // Requirement: "show only columns on where you see data" -> implies hidden columns usually means no data.
-                    // But if a column has ANY data, we show it. If it has NO data, it contributes 0 to sum anyway.
-                    // So we can extract scores from the filtered row (skipping index 0).
-
+                    // Extract numeric task scores. A column that is empty for every student is
+                    // already filtered out above, so an empty cell here means "no points".
                     for (let j = 1; j < filteredRow.length; j++) {
-                        const score = parseFloat(filteredRow[j]);
+                        const raw = filteredRow[j];
+                        const isEmpty = raw === undefined || raw === null || raw.toString().trim() === '';
+                        const score = parseScore(raw);
+
                         if (!isNaN(score)) {
                             studentData.taskScores.push(score);
+                        } else if (!isEmpty) {
+                            badCells.push('line ' + (i + 1) + ', column "' + (filteredHeaders[j] || j) + '": "' + truncate(raw.toString(), 20) + '"');
                         }
                     }
 
-                    if (studentData.mtknr) {
-                        gradingData.push(studentData);
-                    }
+                    parsedStudents.push(studentData);
                 }
 
-                if (gradingData.length === 0) {
-                    showError('No valid student data found in the Excel file');
+                if (parsedStudents.length === 0) {
+                    showError(
+                        'No student rows found. ' + (rowsWithoutId.length > 0
+                            ? rowsWithoutId.length + ' row(s) had an empty student ID in the first column.'
+                            : 'Every row after the header was empty.')
+                    );
                     return;
                 }
+
+                if (badCells.length > 0) {
+                    showError(
+                        'Found ' + badCells.length + ' cell(s) that are not a number: ' +
+                        badCells.slice(0, 5).join('; ') +
+                        (badCells.length > 5 ? '; ...' : '') + '. ' +
+                        'Scores must be plain numbers such as 8 or 8.5.'
+                    );
+                    return;
+                }
+
+                gradingData = parsedStudents;
 
                 // Calculate grades
                 calculateGrades();
@@ -1050,7 +1184,8 @@
                 updateSummaryStats();
                 updateCharts(); // Phase 3: Create initial charts
 
-                showInfo('Successfully loaded ' + gradingData.length + ' students from the Excel file');
+                showInfo('Successfully loaded ' + gradingData.length + ' students (' + (filteredHeaders.length - 1) + ' task columns)' +
+                    (rowsWithoutId.length > 0 ? '. Skipped ' + rowsWithoutId.length + ' row(s) without a student ID (line ' + rowsWithoutId.slice(0, 5).join(', ') + ')' : ''));
 
             } catch (error) {
                 showError('Error processing grading data: ' + error.message);
